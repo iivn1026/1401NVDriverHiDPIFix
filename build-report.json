@@ -1,0 +1,78 @@
+{
+  "artifact": "Version-matched NVRMFB EDID HiDPI experimental package",
+  "nvidia_headers_tag": "610.57.04",
+  "nvidia_headers_commit": "e4a5faa2567f28c8eabe0ebb6422b6d0abcf37eb",
+  "architecture": "x86_64",
+  "boot_argument": "nvfbhidpi=1",
+  "default_enabled": false,
+  "edid_scope": "Digital EDID 1.3/1.4 base block; first explicitly preferred non-interlaced DTD and base physical size",
+  "identity_or_aspect_whitelist": false,
+  "build": "passed",
+  "ad_hoc_signature_check": "passed",
+  "undefined_import_comparison": "Each payload matches its unmodified source baseline; 2.0.1 also matches imports of installed 2.0.1 framebuffer.",
+  "warning_count": 30,
+  "sanitizer_policy_tests": "passed; multiple geometries, corrupt/truncated EDID, fallback sizing, caps/aspect and 100000 arbitrary-input trials",
+  "generic_auxkc_preflight": "not performed",
+  "generic_driver_installed": false,
+  "other_hardware_functionally_tested": false,
+  "private_auxkc_or_machine_identity_included": false,
+  "hardware_validation": "No cross-device hardware qualification; no personal device history included.",
+  "documentation": "Bilingual, English first; prominent cautions; paired backup, staged manual installation, macOS rollback and offline Recovery procedures.",
+  "command_tools": {
+    "entries": [
+      "Install.command",
+      "Rollback.command",
+      "Recovery.command"
+    ],
+    "root_helper_transaction_fixtures": "Passed separately on 1.15.0 and 2.0.1 fixtures: paired install/restore, preflight/live build failure, restore-publish failure and unsupported-version rejection.",
+    "frontend_validation": "shell syntax checked",
+    "real_install_or_recovery_tested": false,
+    "automatic_reboot": false,
+    "EFI_or_boot_args_modified": false,
+    "ui": "Automatic Chinese/English; concise normal output, full diagnostic log",
+    "language_tests": "Passed: Simplified/Traditional Chinese preferences, English/other-language fallback, explicit zh/en overrides."
+  },
+  "compatibility_feedback": {
+    "reported_versions": [
+      "1.15.0",
+      "2.0.1"
+    ],
+    "reported_devices": [
+      "ASUS TXGaming 6 Pro",
+      "Lenovo Legion Y7000P 2023",
+      "ROG Laptop (exact model not provided)"
+    ],
+    "source": "Compatibility feedback supplied for documentation; not independently reproduced",
+    "complete_device_version_matrix_supplied": false,
+    "installer_accepted_versions": [
+      "1.15.0",
+      "2.0.1"
+    ],
+    "other_versions_verified": false,
+    "additional_feedback": "Current system upgraded to 2.0.1 and reported working; version-matched experimental payload itself has not been installed by this task."
+  },
+  "source_releases": [
+    "v1.15.0",
+    "v2.0.1"
+  ],
+  "payloads": {
+    "1.15.0": {
+      "source_commit": "56bc4f9ae3105df052eefd3ea094c782e56853c3",
+      "uuid": "8BDBFC44-94EA-380E-8159-DFF6D84D3C84",
+      "binary_sha256": "dbb47e1f9a518a8db792a7ab1e1cf6282523a116ac0b08950ef0321cd1908d34",
+      "undefined_import_count": 466,
+      "warnings": 30,
+      "ABI_headers_modified": false,
+      "generic_payload_installed": false
+    },
+    "2.0.1": {
+      "source_commit": "db3716fde712f0542ef7fcec29226b26e99e07dc",
+      "uuid": "F2050614-502D-3BA4-9DE0-015F43818C44",
+      "binary_sha256": "cc3f20396866bc0a08748ab10699e1ee71c51d825e17e0fe9617f0f3996ab7d5",
+      "undefined_import_count": 467,
+      "warnings": 30,
+      "ABI_headers_modified": false,
+      "generic_payload_installed": false
+    }
+  }
+}

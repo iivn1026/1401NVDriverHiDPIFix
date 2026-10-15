@@ -24,4 +24,4 @@ sudo /bin/bash "$HERE/scripts/restore-framebuffer.sh" /System/Volumes/Data "$BK"
 ask 'Type RESTORE to restore: ' '输入 RESTORE 恢复：' answer
 [ "$answer" = RESTORE ] || { msg 'Cancelled.' '已取消。'; exit 0; }
 sudo /bin/bash "$HERE/scripts/restore-framebuffer.sh" /System/Volumes/Data "$BK" restore "$NVRMFB_UI_LANG"
-msg 'Remove nvfbhidpi=1 if added, then reboot manually.' '若添加过 nvfbhidpi=1，请移除后自行重启。'
+msg 'Remove nvfbhidpi=1 and nvfbhidpiscaled=1 if added, then reboot manually.' '若添加过 nvfbhidpi=1 和 nvfbhidpiscaled=1，请移除后自行重启。'

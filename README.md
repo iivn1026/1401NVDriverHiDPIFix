@@ -35,6 +35,32 @@ Compatibility feedback supplied for three devices; detailed logs and a complete 
 
 **macOS upgrade feedback:** A user reported that HiDPI remained effective after upgrading from **macOS 15.8.1 to macOS 26.7.1**.
 
+## Higher HiDPI resolutions (new experimental option)
+
+**This revision adds a separately gated supersampling path; it has passed source and boundary tests, but has not been tested on a physical display. Earlier working reports do not validate these new binaries or higher modes.**
+
+A 2560×1440 backing surface yields a logical 1280×720 HiDPI desktop. Larger logical sizes require larger backing surfaces, downsampled to the unchanged native panel timing:
+
+| Native panel | Logical HiDPI candidates | Required backing surfaces |
+| --- | --- | --- |
+| 2560×1440 | 1600×900, 1920×1080, 2048×1152, 2240×1260, 2560×1440 | 3200×1800, 3840×2160, 4096×2304, 4480×2520, 5120×2880 |
+| 2560×1600 | 1600×1000, 1920×1200, 2048×1280, 2240×1400, 2560×1600 | 3200×2000, 3840×2400, 4096×2560, 4480×2800, 5120×3200 |
+
+These are generated candidates, **not guaranteed selectable modes**. The driver offers only exact-aspect, even backing sizes from 1.25×, 4/3×, 1.5×, 1.6×, 1.75× and 2× the preferred raster, within 7680×4320 and the memory actually allocated. Invalid EDID, no matching NVKMS-validated native timing, a full mode table or insufficient memory can omit modes. It does not force a higher physical output resolution or refresh rate, or make a 1440p panel physically 4K. Higher rendering sizes use more video memory and processing time.
+
+After the baseline and `nvfbhidpi=1` tests succeed, add **`nvfbhidpiscaled=1` alongside `nvfbhidpi=1`** in the active EFI's boot arguments and restart manually. Enable “Show all resolutions” in Displays. Keep the other arguments, including `-v`, unchanged. The installer does not edit EFI or select a resolution.
+
+If higher modes cause problems, remove **only `nvfbhidpiscaled=1`** first to return to metadata-only behavior. If the desktop cannot boot, use the preserved EFI without both experimental arguments, or Recovery to restore the paired NVRMFB + AuxKC backup. Merely switching EFI does not restore driver files.
+
+## Portable external backups (FAT32 / exFAT / APFS)
+
+The external-copy helper writes and verifies file **contents only**. It does not copy APFS `restricted` flags, ACLs, xattrs or resource forks, avoiding metadata-related `ditto … AuxiliaryKernelExtensions.kc: Invalid argument` failures. The screenshot alone cannot rule out other filesystem problems; actual write/read/hash failures still stop installation. Recovery rebuilds root ownership and safe kext permissions on the target APFS volume.
+
+- FAT32, exFAT and APFS data volumes use the same workflow. **FAT32 cannot hold an individual file larger than 4 GiB minus 1 byte**; the helper refuses such a copy and asks for exFAT/APFS. It does not format or erase the destination.
+- Keep the full directory, including `original.sha256`, `installed-aux.sha256` after installation, the kext, AuxKC and Recovery tools. Do not rename files within it.
+- A failed copy leaves `.copy-incomplete`; the restore helper refuses that directory. Use the intact internal backup or make a verified new external copy. **Do not remove the backup stage or delete the marker to bypass a failure.**
+- Only ordinary files/directories are supported by this portable copy. Symlinks and special files are refused, not silently changed.
+
 ## Double-click installation and rollback
 
 > [!IMPORTANT]
@@ -69,7 +95,7 @@ The red, bold warning is a bundled SVG image, so it does not rely on inline CSS 
 3. The program prints the newly created private backup directory. Enter the external volume's full path, for example `/Volumes/YOUR-USB`, **without quotes or backslash escapes**. It creates a new backup subdirectory there; the EFI is not overwritten. Leaving this field empty stops after backup, with no driver replacement.
 4. Only after the external copy succeeds, type `INSTALL` to proceed. Any other answer cancels before replacing drivers.
 5. Wait for `INSTALLED` **and** the final external-backup refresh success. If copying fails after installation, preserve the internal backup and fix the external copy before rebooting.
-6. Save work and reboot manually. The first boot should omit `nvfbhidpi=1`. If this argument was already present, remove only it using the active EFI's configuration before rebooting; the installer does not remove it for you. After baseline checks pass, add it again for the experiment.
+6. Save work and reboot manually. The first boot should omit `nvfbhidpi=1` and `nvfbhidpiscaled=1`. If either argument was already present, remove only these experiment arguments using the active EFI's configuration before rebooting; the installer does not remove it for you. After baseline checks pass, add it again for the experiment.
 
 If executable permissions were lost, run the same entry from Terminal instead of changing system security policy:
 
@@ -77,7 +103,7 @@ If executable permissions were lost, run the same entry from Terminal instead of
 bash "/path/to/extracted-package/Install.command"
 ```
 
-**Rollback while macOS works:** double-click `Rollback.command`. Press Return to use the printed default backup path, or enter the exact backup directory without quotes. Checks run first. Type `RESTORE` to restore, then remove only the experimental boot argument if added and reboot manually. A cancelled installation may have recorded a newer backup; always review the displayed path.
+**Rollback while macOS works:** double-click `Rollback.command`. Press Return to use the printed default backup path, or enter the exact backup directory without quotes. Checks run first. Type `RESTORE` to restore, then remove both experimental boot arguments if added and reboot manually. A cancelled installation may have recorded a newer backup; always review the displayed path.
 
 **Cannot boot:** in OpenCore press Space and enter Recovery; mount/unlock the original data volume in Disk Utility, then open Utilities → Terminal. Set actual paths, not these placeholders:
 
@@ -143,7 +169,7 @@ Copy the whole backup directory to a mounted external data volume. Replace `YOUR
 ```sh
 NVRMFB_USB="/Volumes/YOUR-USB"
 test -d "$NVRMFB_USB"
-sudo ditto "$NVRMFB_BACKUP" "$NVRMFB_USB/$(basename "$NVRMFB_BACKUP")"
+sudo /bin/bash "$NVRMFB_PACKAGE/scripts/copy-backup.sh" "$NVRMFB_BACKUP" "$NVRMFB_USB/$(basename "$NVRMFB_BACKUP")"
 ```
 
 Keep the original backup path and external volume name written down. Verify the copied files are readable. The external backup must be refreshed after a successful installation, as explained below.
@@ -163,12 +189,12 @@ Continue only after `INSTALLED` appears. `No variant specified, falling back to 
 Refresh the external backup now so that it includes `installed-aux.sha256`, which the offline restore checks against the installed test collection:
 
 ```sh
-sudo ditto "$NVRMFB_BACKUP" "$NVRMFB_USB/$(basename "$NVRMFB_BACKUP")"
+sudo /bin/bash "$NVRMFB_PACKAGE/scripts/copy-backup.sh" "$NVRMFB_BACKUP" "$NVRMFB_USB/$(basename "$NVRMFB_BACKUP")"
 ```
 
 ### 4. First boot with the experiment disabled
 
-Save work and restart manually. Do **not** add `nvfbhidpi=1` yet. Verify the desktop and previously working devices, especially networking, audio, Bluetooth and input. If this baseline fails, perform the rollback below.
+Save work and restart manually. Do **not** add `nvfbhidpi=1` or `nvfbhidpiscaled=1` yet. Verify the desktop and previously working devices, especially networking, audio, Bluetooth and input. If this baseline fails, perform the rollback below.
 
 ### 5. Enable the metadata experiment
 
@@ -186,14 +212,14 @@ kmutil showloaded --list-only | awk '/com.nullmoth.NVRMFB/'
 system_profiler SPDisplaysDataType
 ```
 
-Payload UUIDs: **1.15.0: `8BDBFC44-94EA-380E-8159-DFF6D84D3C84`; 2.0.1: `F2050614-502D-3BA4-9DE0-015F43818C44`**. Confirm the boot argument is present and the payload matching the installed release is loaded. In System Settings → Displays, inspect available resolutions; show all resolutions if needed. Select a HiDPI candidate, not a low-resolution duplicate.
+Payload UUIDs: **1.15.0: `71E8307F-9335-3C74-95E8-ECE8777A49BA`; 2.0.1: `00C3E4DB-7885-374A-BD7D-570F50B69098`**. Confirm the boot argument is present and the payload matching the installed release is loaded. In System Settings → Displays, inspect available resolutions; show all resolutions if needed. Select a HiDPI candidate, not a low-resolution duplicate.
 
-A logical 1920×1080 mode backed by 3840×2160 pixels is 2× HiDPI; logical and backing sizes being equal is not. A larger boot logo or new candidates alone do not prove the desktop is using HiDPI. The patch does not inject missing modes or guarantee a particular scaling percentage. Avoid adding unrelated display overrides in the same test.
+A logical 1920×1080 mode backed by 3840×2160 pixels is 2× HiDPI; logical and backing sizes being equal is not. A larger boot logo or new candidates alone do not prove the desktop is using HiDPI. With the additional `nvfbhidpiscaled=1` opt-in it can add the bounded backing modes described above; a particular scaling percentage is not guaranteed. Avoid adding unrelated display overrides in the same test.
 
 ## Rollback in macOS
 
 > [!IMPORTANT]
-> **Full rollback requires restoring NVRMFB and its matching AuxKC together. Removing `nvfbhidpi=1` only disables the experiment; it does not restore the original binary.**
+> **Full rollback requires restoring NVRMFB and its matching AuxKC together. Removing `nvfbhidpi=1` and `nvfbhidpiscaled=1` only disables the experiment; it does not restore the original binary.**
 
 Close all updaters/installers. Use the paired backup from before this installation, with no intervening macOS or extension updates. Set `NVRMFB_BACKUP` to its actual path. The block verifies backup integrity and that other extensions are unchanged, recognizes the original or recorded test AuxKC, then restores the pair. A mismatch aborts the block; do not bypass it.
 
@@ -201,7 +227,7 @@ Close all updaters/installers. Use the paired backup from before this installati
 sudo /bin/bash "$NVRMFB_PACKAGE/scripts/restore-framebuffer.sh" /System/Volumes/Data "$NVRMFB_BACKUP" restore en
 ```
 
-After `RESTORED`, remove only `nvfbhidpi=1` from the active EFI if it was added, then save work and restart manually. The original upstream framebuffer ignores the experimental argument. Display overrides installed separately require their own rollback; these commands do not remove them.
+After `RESTORED`, remove `nvfbhidpi=1` and `nvfbhidpiscaled=1` from the active EFI if it was added, then save work and restart manually. The original upstream framebuffer ignores the experimental argument. Display overrides installed separately require their own rollback; these commands do not remove them.
 
 ## Cannot boot: offline Recovery
 
@@ -229,7 +255,7 @@ If the external backup was not refreshed after installation, the original intern
 bash "$NVRMFB_BACKUP/Recovery.command" "$NVRMFB_TARGET"
 ```
 
-7. Restart manually after `RESTORED`. If the original bootloader is intact, the restored original driver should no longer execute the experimental code. An old `nvfbhidpi=1` can be removed after booting back into macOS; it is not understood by the unmodified upstream framebuffer. Use the preserved EFI if the active EFI was also damaged.
+7. Restart manually after `RESTORED`. If the original bootloader is intact, the restored original driver should no longer execute the experimental code. Old `nvfbhidpi=1` and `nvfbhidpiscaled=1` arguments can be removed after booting back into macOS; it is not understood by the unmodified upstream framebuffer. Use the preserved EFI if the active EFI was also damaged.
 
 If Recovery cannot mount/unlock the data volume, or the backup is missing/corrupt, these commands cannot restore it. Preserve the disk and obtain a working recovery environment or a known-good compatible driver installation; do not substitute another machine’s AuxKC.
 
@@ -237,15 +263,15 @@ If Recovery cannot mount/unlock the data volume, or the backup is missing/corrup
 
 The opt-in policy checks each digital EDID 1.3/1.4 base block. It reads physical size from the first explicitly preferred non-interlaced DTD, falling back to complete base-block centimetre fields. Missing mode dimensions are filled while an existing complete pair is preserved. HiRes flags are added only to already-enumerated even-sized modes with the preferred aspect, at least preferred size, within that framebuffer’s scaler caps and a 16384-pixel per-axis guard.
 
-There is no model/vendor whitelist or fixed physical size. Invalid/unsupported EDID is left unchanged. CTA/DisplayID preferred timing/physical size parsing is not implemented. No timing, allocation, accelerator ABI or other GPU component is changed.
+There is no model/vendor whitelist or fixed physical size. Invalid/unsupported EDID is left unchanged. CTA/DisplayID preferred timing/physical size parsing is not implemented. The metadata-only path changes no timing or allocation. The additional scaled-mode opt-in expands the backing allocation and enumerates larger source surfaces, while preserving physical panel timings, accelerator ABI and other GPU components.
 
 Compilation, strict ad-hoc signature verification, all 466 (1.15.0) / 467 (2.0.1) import comparisons, clean patch application, and ASan/UBSan tests pass. Tests cover multiple synthetic display geometries, malformed EDID, bounds/fallbacks and 100,000 arbitrary inputs. There are 30 existing upstream warnings, with no added warnings. **The generic binary and the manual installation/recovery procedure have not been validated end-to-end on other hardware or inside a real Recovery session.** Do not equate source tests with boot/display compatibility.
 
 ## Files and source
 
-The package includes versioned `payloads/…/NVRMFB.kext`, matching `patches/…` source patches, standalone metadata header, test harness, build helper, `build-report.json`, `SHA256SUMS` and retained upstream license/notices. Portable `.command` entry points and shared shell helpers are included; no machine-bound installer state or personal backup is distributed. Backup directories created by the commands are private and must not be uploaded.
+The package includes versioned `payloads/…/NVRMFB.kext`, matching `patches/…` source patches, standalone policy header, both test harnesses, build helper, `build-report.json`, `SHA256SUMS` and retained upstream license/notices. Portable `.command` entry points and shared shell helpers are included; no machine-bound installer state or personal backup is distributed. Backup directories created by the commands are private and must not be uploaded.
 
-Rebuild with Command Line Tools and an SDK containing Kernel.framework headers. Copy the build helper, `patches/` directory and test harness into a fresh directory, then run:
+Rebuild with Command Line Tools and an SDK containing Kernel.framework headers. Copy the build helper, `patches/` directory, `nvrm-edid-hidpi-policy.h` and both test harnesses into a fresh directory, then run:
 
 ```sh
 NVRMFB_SOURCE_VERSION=1.15.0  # or 2.0.1
@@ -263,6 +289,8 @@ git -C source apply ../patches/"$NVRMFB_SOURCE_VERSION".patch
 bash build_framebuffer.sh "$PWD/out-generic"
 clang++ -std=c++17 -fsanitize=address,undefined -fno-omit-frame-pointer test_edid_policy.cpp -o test_edid_policy
 ./test_edid_policy
+clang++ -std=c++17 -fsanitize=address,undefined -fno-omit-frame-pointer test_scaled_modes.cpp -o test_scaled_modes
+./test_scaled_modes
 ```
 
 References: [pinned upstream installer](https://github.com/nullmoth/nvidia-macos-driver/blob/v1.15.0/app/Resources/nullmoth-install.sh), [OpenCore auxiliary picker entries](https://dortania.github.io/docs/release/Configuration.html), [Apple Recovery](https://support.apple.com/en-ie/102518), [EDID field definitions](https://github.com/torvalds/linux/blob/v6.12/include/drm/drm_edid.h). Upstream licensing terms continue to apply.
@@ -296,6 +324,32 @@ References: [pinned upstream installer](https://github.com/nullmoth/nvidia-macos
 | ROG Laptop（具体型号未提供） | 反馈可用；具体型号和完整版本矩阵未提供 |
 
 **macOS 升级反馈：** 有用户报告，从 **macOS 15.8.1 升级到 macOS 26.7.1** 后，HiDPI 仍然生效。
+
+## 更高 HiDPI 分辨率（新增实验开关）
+
+**本次新增的超采样路径已通过源码和边界测试，但尚未在真实显示器上验证。此前的可用反馈不等于本次新二进制与新增档位已实测。**
+
+2560×1440 渲染缓冲区对应 1280×720 的 HiDPI。要让界面看起来像 1600×900 或 1920×1080，需要更大的渲染缓冲区，再缩回面板原生尺寸：
+
+| 原生面板 | 逻辑 HiDPI 候选 | 所需渲染尺寸 |
+| --- | --- | --- |
+| 2560×1440 | 1600×900、1920×1080、2048×1152、2240×1260、2560×1440 | 3200×1800、3840×2160、4096×2304、4480×2520、5120×2880 |
+| 2560×1600 | 1600×1000、1920×1200、2048×1280、2240×1400、2560×1600 | 3200×2000、3840×2400、4096×2560、4480×2800、5120×3200 |
+
+以上是代码生成的候选，**不保证每台设备都会显示或成功切换**。按首选物理分辨率的 1.25、4/3、1.5、1.6、1.75、2 倍生成，仅保留精确同比例、偶数尺寸、在 7680×4320 和实际已分配显存内的档位。EDID 无效、缺少 NVKMS 验证过的首选时序、模式表已满、显存不足时会省略候选，不强行输出。不会改变物理输出分辨率或刷新率，也不会把 1440p 面板变成物理 4K；更高渲染尺寸会增加显存占用和处理开销。
+
+基础启动和 `nvfbhidpi=1` 验证成功后，再在实际启动 EFI 的 boot-args 中**同时保留 `nvfbhidpi=1`，追加 `nvfbhidpiscaled=1`**，自行重启，在显示设置中开启“显示所有分辨率”。其他参数（包括 `-v`）保持不变；安装器不自动改 EFI、不自动选分辨率。
+
+新增档位有问题时，先只移除 **`nvfbhidpiscaled=1`**，恢复原来的元数据行为；无法进桌面时，用不含两个实验参数的备用 EFI 尝试启动，或进入 Recovery 恢复配对的 NVRMFB 与 AuxKC。只换 EFI 不等于恢复驱动文件。
+
+## 通用外部备份（FAT32 / exFAT / APFS）
+
+外部复制改为只写入和校验**文件内容**，不复制 APFS 的 `restricted` 标志、ACL、扩展属性和资源叉，避免元数据导致的 `ditto … AuxiliaryKernelExtensions.kc: Invalid argument`。仅凭截图不能排除其他文件系统问题；真实的读写、校验失败仍会停止安装。回退时会在目标 APFS 卷上重建 root 所有权和安全的 kext 权限。
+
+- FAT32、exFAT、APFS 的普通数据卷使用相同流程；**FAT32 单文件上限为 4 GiB 减 1 字节**，超限时拒绝复制，改用 exFAT/APFS。脚本不会格式化或清空目标卷。
+- 保留整个目录，包括原始校验、安装后生成的 `installed-aux.sha256`、驱动、AuxKC 与恢复脚本，不改内部文件名。
+- 复制失败会保留 `.copy-incomplete` 标记，恢复脚本拒绝使用该目录。此时使用完整内部备份，或重新制作并核对外部副本。**不要删掉备份步骤，也不要删除标记绕过报错。**
+- 通用目录复制仅支持普通文件与目录；遇到符号链接或特殊文件会停止，不静默改写。
 
 ## 双击安装与回退（推荐入口）
 
@@ -331,7 +385,7 @@ NVRMFB_UI_LANG=en bash "/实际解压路径/Install.command"
 3. 程序生成内部配对备份并显示路径。输入外部卷完整路径，例如 `/Volumes/YOUR-USB`，**不加引号，不加反斜杠转义**。程序会在其下新建备份目录，不覆盖 EFI。此处留空，只保留备份并结束，不替换驱动。
 4. 外部副本核对成功后，输入 `INSTALL` 才继续安装；其他回答会在替换驱动前取消。
 5. 等待 `INSTALLED` 以及最后的“外部备份同步完成”提示。若安装后外部同步失败，保留内部备份，先完成外部复制再重启。
-6. 保存工作，自行重启。首次基础验证应不含 `nvfbhidpi=1`；若此前已有这个参数，请先用 OCC 从实际启动 EFI 中仅移除它，其他参数保留。安装器不会代替你修改参数。基础验证通过后，再加回该参数做 HiDPI 实验。
+6. 保存工作，自行重启。首次基础验证应不含 `nvfbhidpi=1` 和 `nvfbhidpiscaled=1`；若此前已有这些参数，请先用 OCC 从实际启动 EFI 中仅移除它们，其他参数保留。安装器不会代替你修改参数。基础验证通过后，再加回该参数做 HiDPI 实验。
 
 如果解压后执行权限丢失，可从终端调用同一入口，无需关闭系统安全策略：
 
@@ -405,7 +459,7 @@ sudo ls "$NVRMFB_BACKUP"
 ```sh
 NVRMFB_USB="/Volumes/YOUR-USB"
 test -d "$NVRMFB_USB"
-sudo ditto "$NVRMFB_BACKUP" "$NVRMFB_USB/$(basename "$NVRMFB_BACKUP")"
+sudo /bin/bash "$NVRMFB_PACKAGE/scripts/copy-backup.sh" "$NVRMFB_BACKUP" "$NVRMFB_USB/$(basename "$NVRMFB_BACKUP")"
 ```
 
 记下内部备份完整路径和 U 盘卷名，检查外部副本能读取。安装成功后还需要重新同步一次备份，以包含新集合的校验记录。
@@ -425,12 +479,12 @@ sudo /bin/bash "$NVRMFB_PACKAGE/scripts/install-framebuffer.sh" "$NVRMFB_PACKAGE
 安装成功后重新复制备份，使 U 盘副本包含 `installed-aux.sha256`。离线回退用它判断当前集合是否属于本次测试：
 
 ```sh
-sudo ditto "$NVRMFB_BACKUP" "$NVRMFB_USB/$(basename "$NVRMFB_BACKUP")"
+sudo /bin/bash "$NVRMFB_PACKAGE/scripts/copy-backup.sh" "$NVRMFB_BACKUP" "$NVRMFB_USB/$(basename "$NVRMFB_BACKUP")"
 ```
 
 ### 4. 第一次重启先保持实验关闭
 
-保存工作后自行重启，**先不要添加 `nvfbhidpi=1`**。确认桌面、原有网络、声音、蓝牙、输入设备正常。基础启动失败，就按下面步骤回退，不继续添加实验参数。
+保存工作后自行重启，**先不要添加 `nvfbhidpi=1` 或 `nvfbhidpiscaled=1`**。确认桌面、原有网络、声音、蓝牙、输入设备正常。基础启动失败，就按下面步骤回退，不继续添加实验参数。
 
 ### 5. 开启实验参数
 
@@ -448,14 +502,14 @@ kmutil showloaded --list-only | awk '/com.nullmoth.NVRMFB/'
 system_profiler SPDisplaysDataType
 ```
 
-配套 UUID：**1.15.0 为 `8BDBFC44-94EA-380E-8159-DFF6D84D3C84`；2.0.1 为 `F2050614-502D-3BA4-9DE0-015F43818C44`**。核对参数和实际加载版本，再到“系统设置 → 显示器”查看分辨率，必要时显示全部分辨率。选择 HiDPI 候选，不要误选同名的“低分辨率”模式。
+配套 UUID：**1.15.0 为 `71E8307F-9335-3C74-95E8-ECE8777A49BA`；2.0.1 为 `00C3E4DB-7885-374A-BD7D-570F50B69098`**。核对参数和实际加载版本，再到“系统设置 → 显示器”查看分辨率，必要时显示全部分辨率。选择 HiDPI 候选，不要误选同名的“低分辨率”模式。
 
-例如逻辑 1920×1080、实际渲染 3840×2160，才是 2 倍 HiDPI。逻辑尺寸与实际像素相同不算。开机 Logo 变大、列表出现候选，也不能直接报告桌面 HiDPI 已成功。缺少所需 backing 模式时，本补丁不会凭空补出模式；测试期间不要叠加其他显示覆盖修改。
+例如逻辑 1920×1080、实际渲染 3840×2160，才是 2 倍 HiDPI。逻辑尺寸与实际像素相同不算。开机 Logo 变大、列表出现候选，也不能直接报告桌面 HiDPI 已成功。额外启用 `nvfbhidpiscaled=1` 才会按上文规则添加受限的 backing 候选；测试期间不要叠加其他显示覆盖修改。
 
 ## 还能进系统时回退
 
 > [!IMPORTANT]
-> **完整回退必须同时恢复安装前的 NVRMFB 和匹配 AuxKC。删除 `nvfbhidpi=1` 只关闭实验逻辑，不会恢复原二进制文件。**
+> **完整回退必须同时恢复安装前的 NVRMFB 和匹配 AuxKC。删除 `nvfbhidpi=1` 和 `nvfbhidpiscaled=1` 只关闭实验逻辑，不会恢复原二进制文件。**
 
 关闭所有更新器和安装工具。确保此后没有更新系统或其他扩展，将 `NVRMFB_BACKUP` 指向本次安装前的真实备份目录，再完整执行以下区块。它会检查备份、其他扩展及当前集合的身份；任何校验失败都先停止，不能绕过。
 
@@ -463,7 +517,7 @@ system_profiler SPDisplaysDataType
 sudo /bin/bash "$NVRMFB_PACKAGE/scripts/restore-framebuffer.sh" /System/Volumes/Data "$NVRMFB_BACKUP" restore zh
 ```
 
-看到 **`RESTORED`** 后，从实际启动 EFI 中仅删除本次添加的 `nvfbhidpi=1`，保存工作，再重启。原版上游驱动不处理该实验参数。单独安装过的显示覆盖文件必须按其自己的备份恢复，这组命令不删除它们。
+看到 **`RESTORED`** 后，从实际启动 EFI 中仅删除本次添加的 `nvfbhidpi=1` 和 `nvfbhidpiscaled=1`，保存工作，再重启。原版上游驱动不处理该实验参数。单独安装过的显示覆盖文件必须按其自己的备份恢复，这组命令不删除它们。
 
 ## 无法进入系统时离线回退
 
@@ -500,7 +554,7 @@ bash "$NVRMFB_BACKUP/Recovery.command" "$NVRMFB_TARGET"
 - 基于每个输出各自的数字 EDID 1.3/1.4，不限定品牌、型号、物理尺寸或固定屏幕比例。
 - 读取首选非隔行 DTD 的毫米尺寸，没有可用值时回退到完整的厘米尺寸；保留已有完整的物理尺寸。异常或不支持的 EDID 保持原状。
 - 只给已枚举、偶数尺寸、不小于首选尺寸、比例与首选模式相同、处于实际 scaler 上限内且每轴不超过 16384 像素的模式添加 HiRes 候选标记。
-- 不修改显示时序、显存分配、GPU ABI 或其他驱动。尚未解析 CTA/DisplayID 扩展中的首选模式和尺寸，不能覆盖所有显示器。
+- 默认元数据路径不改时序或显存分配；额外开启高档位时会扩大渲染缓冲区并枚举较大源表面，但保留物理输出时序，不改 GPU ABI 或其他驱动。尚未解析 CTA/DisplayID 扩展中的首选模式和尺寸，不能覆盖所有显示器。
 - 编译、签名、466（1.15.0）/467（2.0.1）个导入符号比较、补丁应用与 ASan/UBSan 测试通过；覆盖多种合成屏幕参数、异常 EDID、边界和十万组输入。保留 30 条上游原有警告，没有新增警告。
 - **通用二进制和上述安装/回退流程尚未在其他硬件与真实 Recovery 中完成端到端验证。** 测试通过不等于实际启动、切换显示模式和设备兼容性已验证。
 - 此包提供通用 `.command` 入口与共享 Shell 辅助脚本，不附带绑定特定设备的安装状态；在目标设备现场生成备份。生成的备份包含私有卷信息，**不要公开上传**。

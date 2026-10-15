@@ -23,6 +23,7 @@ fi
 [ -d "$TARGET/Library/Extensions" ]
 [ -f "$TARGET/Library/KernelCollections/AuxiliaryKernelExtensions.kc" ]
 [ -d "$BK/NVRMFB.kext" ]
+[ ! -e "$BK/.copy-incomplete" ] || { warn 'STOP: external backup copy is incomplete. Use the intact internal backup.' '停止：外部备份复制未完成，请使用完整内部备份。'; exit 1; }
 TMP=$(mktemp -d /tmp/nvrmfb-restore.XXXXXX)
 OWN_LOCK=''
 cleanup() {
@@ -63,7 +64,11 @@ SAVE=$(mktemp -d "$TARGET/Library/KernelCollections/HiDPI-restore.XXXXXX")
 chmod 700 "$SAVE"
 ditto "$BK/NVRMFB.kext" "$SAVE/original.kext"
 chown -R 0:0 "$SAVE/original.kext"
-chmod -R go-w "$SAVE/original.kext"
+find "$SAVE/original.kext" -type d -exec chmod 755 {} \;
+find "$SAVE/original.kext" -type f -exec chmod 644 {} \;
+if [ -d "$SAVE/original.kext/Contents/MacOS" ]; then
+    find "$SAVE/original.kext/Contents/MacOS" -type f -exec chmod 755 {} \;
+fi
 cp "$BK/AuxiliaryKernelExtensions.kc" "$SAVE/original.kc"
 chown 0:0 "$SAVE/original.kc"
 chmod 644 "$SAVE/original.kc"
@@ -79,4 +84,4 @@ mv "$SAVE/original.kext" "$TARGET/Library/Extensions/NVRMFB.kext"
 mv -f "$SAVE/original.kc" "$KC"
 trap - ERR
 msg "RESTORED. Previous files: $SAVE" "RESTORED：回退完成。原文件保留于：$SAVE"
-msg 'Remove nvfbhidpi=1 if added, then reboot manually.' '若添加过 nvfbhidpi=1，请移除后自行重启。'
+msg 'Remove nvfbhidpi=1 and nvfbhidpiscaled=1 if added, then reboot manually.' '若添加过 nvfbhidpi=1 和 nvfbhidpiscaled=1，请移除后自行重启。'

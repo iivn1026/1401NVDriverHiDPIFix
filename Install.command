@@ -23,7 +23,7 @@ finish() {
 }
 trap finish EXIT
 msg 'NVRMFB HiDPI | 1.15.0 / 2.0.1' 'NVRMFB HiDPI | 1.15.0 / 2.0.1'
-warn 'EXPERIMENTAL: black screen/boot failure possible. Verify Recovery first.' '实验版：可能黑屏或无法启动。请先确认 Recovery 可用。'
+warn 'EXPERIMENTAL: read README.md carefully. Black screen/boot failure possible. Verify Recovery first.' '实验版：必须认真阅读 README.md，可能黑屏或无法启动。先确认 Recovery 可用。'
 msg '[1/4] Verifying package' '[1/4] 校验安装包'
 cd "$HERE"
 shasum -a 256 -c SHA256SUMS >> "$RUNLOG" 2>&1
@@ -48,16 +48,14 @@ case "$EXTERNAL" in /Volumes/*) ;; *) warn 'Use a mounted volume below /Volumes.
 case "$(basename "$EXTERNAL" | tr '[:lower:]' '[:upper:]')" in *EFI*) warn 'Choose a data volume, not EFI.' '请选择数据卷，不要选择 EFI。'; exit 1;; esac
 DEST="$EXTERNAL/$(basename "$BK")"
 [ ! -e "$DEST" ] || { warn 'Backup destination already exists.' '备份目标已存在。'; exit 1; }
-sudo ditto "$BK" "$DEST" >> "$RUNLOG" 2>&1
-sudo diff -qr -x '._*' -x '.DS_Store' "$BK" "$DEST" >> "$RUNLOG" 2>&1
+sudo /bin/bash "$HERE/scripts/copy-backup.sh" "$BK" "$DEST" "$NVRMFB_UI_LANG" >> "$RUNLOG" 2>&1
 ask 'Backup copied. Type INSTALL to proceed: ' '外部备份已核对。输入 INSTALL 安装：' answer
 [ "$answer" = INSTALL ] || { msg 'Cancelled; drivers unchanged.' '已取消，驱动未替换。'; exit 0; }
 msg '[3/4] Preflight and installation (please wait)' '[3/4] 预检并安装，请稍候'
 sudo /bin/bash "$HERE/scripts/install-framebuffer.sh" "$HERE" "$BK" "$NVRMFB_UI_LANG" >> "$RUNLOG" 2>&1
 INSTALLED=1
 msg '[4/4] Refreshing external backup' '[4/4] 同步外部备份'
-sudo ditto "$BK" "$DEST" >> "$RUNLOG" 2>&1
-sudo diff -qr -x '._*' -x '.DS_Store' "$BK" "$DEST" >> "$RUNLOG" 2>&1
+sudo /bin/bash "$HERE/scripts/copy-backup.sh" "$BK" "$DEST" "$NVRMFB_UI_LANG" >> "$RUNLOG" 2>&1
 msg 'INSTALLED. Save work and reboot manually.' 'INSTALLED：安装完成。保存工作后自行重启。'
 msg "Recovery backup: $DEST" "救援备份：$DEST"
-msg 'First boot: omit nvfbhidpi=1. Enable it after baseline checks. EFI is unchanged.' '首次启动先移除 nvfbhidpi=1；基础验证通过后再启用。EFI 未自动修改。'
+msg 'First boot: omit nvfbhidpi=1 and nvfbhidpiscaled=1. Enable experiments in stages; see README.md. EFI unchanged.' '首次启动移除 nvfbhidpi=1 和 nvfbhidpiscaled=1；再按 README.md 分步启用。EFI 未自动修改。'

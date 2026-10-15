@@ -30,7 +30,10 @@
     "automatic_reboot": false,
     "EFI_or_boot_args_modified": false,
     "ui": "Automatic Chinese/English; concise normal output, full diagnostic log",
-    "language_tests": "Passed: Simplified/Traditional Chinese preferences, English/other-language fallback, explicit zh/en overrides."
+    "language_tests": "Passed: Simplified/Traditional Chinese preferences, English/other-language fallback, explicit zh/en overrides.",
+    "external_backup": "Byte-only copy and hash verification; no APFS flags, ACLs or xattrs; incomplete marker blocks restore; safe permissions reconstructed on restore; FAT32 individual files must be <=4294967295 bytes.",
+    "portable_backup_tests": "Passed simulated APFS/exFAT/FAT32 branches, initial/refresh, copy failure/incomplete marker, path/symlink refusal, and FAT32 >4 GiB refusal. Real temporary FAT32 and APFS disk images passed initial/refresh byte/hash verification and xattr stripping. Creating a real exFAT test image required unavailable OS authorization; exFAT has fixture coverage only.",
+    "external_copy_frontend_gate_tests": "Passed: initial external copy failure prevents install; post-install refresh failure reports installation state and do-not-reboot warning, never success."
   },
   "compatibility_feedback": {
     "reported_versions": [
@@ -58,8 +61,8 @@
   "payloads": {
     "1.15.0": {
       "source_commit": "56bc4f9ae3105df052eefd3ea094c782e56853c3",
-      "uuid": "8BDBFC44-94EA-380E-8159-DFF6D84D3C84",
-      "binary_sha256": "dbb47e1f9a518a8db792a7ab1e1cf6282523a116ac0b08950ef0321cd1908d34",
+      "uuid": "71E8307F-9335-3C74-95E8-ECE8777A49BA",
+      "binary_sha256": "9e6038f2fdb7e2f6078a07d01e71f2128fdb239802a05cbdd0b38b7b4ea6e25f",
       "undefined_import_count": 466,
       "warnings": 30,
       "ABI_headers_modified": false,
@@ -67,12 +70,18 @@
     },
     "2.0.1": {
       "source_commit": "db3716fde712f0542ef7fcec29226b26e99e07dc",
-      "uuid": "F2050614-502D-3BA4-9DE0-015F43818C44",
-      "binary_sha256": "cc3f20396866bc0a08748ab10699e1ee71c51d825e17e0fe9617f0f3996ab7d5",
+      "uuid": "00C3E4DB-7885-374A-BD7D-570F50B69098",
+      "binary_sha256": "c9b052c0d755103872d849857fda223b380d2e8f5fcffa480107ca7eba855757",
       "undefined_import_count": 467,
       "warnings": 30,
       "ABI_headers_modified": false,
       "generic_payload_installed": false
     }
-  }
+  },
+  "additional_boot_argument": "nvfbhidpiscaled=1 (requires nvfbhidpi=1); separately gated, default off",
+  "higher_modes": "New unverified supersampled mode path: 1.25x, 4/3x, 1.5x, 1.6x, 1.75x, 2x backing dimensions; exact/even aspect only; max 7680x4320; bounds checked against actual allocated bytes; uses existing NVKMS-validated preferred raster timing.",
+  "new_revision_hardware_validation": "New higher-mode path and revised installer have not been installed on physical hardware by this task; previous user compatibility reports do not validate this revision.",
+  "sanitizer_scaled_mode_tests": "Passed: 2560x1440 and 2560x1600 higher candidates; exact physical timing and DSC preservation; duplicates, capacity, insufficient memory, malformed dimensions, and 100000 bounded-input trials under ASan/UBSan.",
+  "higher_modes_fallback": "Allocation failure uses existing boot-size fallback; enlarged kernel mapping failure also reduces to boot-sized backing and omits larger modes.",
+  "revision": "2026-10-15-higher-modes-and-portable-backup"
 }

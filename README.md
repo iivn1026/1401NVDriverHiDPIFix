@@ -33,6 +33,8 @@ Compatibility feedback supplied for three devices; detailed logs and a complete 
 | Lenovo Legion Y7000P 2023 | Reported working; detailed version matrix not supplied |
 | ROG Laptop (exact model not provided) | Reported working; exact model and detailed version matrix not supplied |
 
+**macOS upgrade feedback:** A user reported that HiDPI remained effective after upgrading from **macOS 15.8.1 to macOS 26.7.1**.
+
 ## Double-click installation and rollback
 
 > [!IMPORTANT]
@@ -292,6 +294,8 @@ References: [pinned upstream installer](https://github.com/nullmoth/nvidia-macos
 | ASUS TXGaming 6 Pro | 反馈可用；未提供完整版本矩阵 |
 | Lenovo Legion Y7000P 2023 | 反馈可用；未提供完整版本矩阵 |
 | ROG Laptop（具体型号未提供） | 反馈可用；具体型号和完整版本矩阵未提供 |
+
+**macOS 升级反馈：** 有用户报告，从 **macOS 15.8.1 升级到 macOS 26.7.1** 后，HiDPI 仍然生效。
 
 ## 双击安装与回退（推荐入口）
 

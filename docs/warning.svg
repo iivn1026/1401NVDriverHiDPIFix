@@ -1,11 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="205" viewBox="0 0 1120 205" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="275" viewBox="0 0 1120 275" role="img" aria-labelledby="title desc">
 <title id="title">Experimental driver warning / 实验驱动警告</title>
-<desc id="desc">Black screen or boot failure possible. Working reports only for 1.15.0 and 2.0.1. Installer selects a matching 1.15.0 or 2.0.1 build. 可能黑屏或无法启动；仅反馈 1.15.0 和 2.0.1 可用，安装器按版本匹配 1.15.0 或 2.0.1。</desc>
-<rect x="3" y="3" width="1114" height="199" rx="12" fill="#fff5f5" stroke="#b91c1c" stroke-width="6"/>
+<desc id="desc">You MUST carefully read the entire README.md before installation. 安装前必须认真阅读完整 README.md。 Black screen or boot failure possible. Working reports only for 1.15.0 and 2.0.1. Installer selects a matching 1.15.0 or 2.0.1 build. 可能黑屏或无法启动；仅反馈 1.15.0 和 2.0.1 可用，安装器按版本匹配 1.15.0 或 2.0.1。</desc>
+<rect x="3" y="3" width="1114" height="269" rx="12" fill="#fff5f5" stroke="#b91c1c" stroke-width="6"/>
 <g fill="#b91c1c" font-family="system-ui,-apple-system,Arial,'Noto Sans CJK SC','Microsoft YaHei',sans-serif" font-weight="800">
 <text x="25" y="38" font-size="25">WARNING — EXPERIMENTAL DRIVER / 警告：实验驱动</text>
 <text x="25" y="71" font-size="20">Reported working: 1.15.0 / 2.0.1 only. Other versions are UNVERIFIED.</text>
 <text x="25" y="104" font-size="22">仅反馈 1.15.0 / 2.0.1 可用，其他版本未验证，可能黑屏或无法启动。</text>
 <text x="25" y="139" font-size="19">Back up first. Verify Recovery. Installer accepts 1.15.0 / 2.0.1 ONLY.</text>
 <text x="25" y="173" font-size="21">先备份并确认 Recovery 可用；安装器仅接受 1.15.0 / 2.0.1，按版本匹配驱动。</text>
+<text x="25" y="208" font-size="21">You MUST carefully read the entire README.md before installation.</text>
+<text x="25" y="243" font-size="23">安装前必须认真阅读完整 README.md，特别是安装、回退及注意事项。</text>
 </g></svg>

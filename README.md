@@ -1,15 +1,16 @@
 # NVRMFB EDID HiDPI experiment — NullMoth 1.15.0 / 2.0.1
 
-![WARNING: experimental driver; reports only for 1.15.0 and 2.0.1; installer matches 1.15.0 or 2.0.1 / 警告：实验驱动，仅反馈两个版本可用，安装器匹配 1.15.0 或 2.0.1](docs/warning.svg)
+![MUST carefully read the entire README.md before installation / 安装前必须认真阅读完整 README.md。WARNING: experimental driver; reports only for 1.15.0 and 2.0.1; installer matches 1.15.0 or 2.0.1 / 警告：实验驱动，仅反馈两个版本可用，安装器匹配 1.15.0 或 2.0.1](docs/warning.svg)
 
 > [!CAUTION]
 > **EXPERIMENTAL — MAY CAUSE A BLACK SCREEN OR PREVENT macOS FROM BOOTING.**
-> **Read the complete installation AND offline recovery sections before changing anything.**
+> **You MUST carefully read the entire README.md before installation, especially the installation, rollback, offline recovery instructions and precautions.**
 > Use only with a working, compatible **NullMoth 1.15.0 or 2.0.1 x86_64** stack. The generic binary has not been hardware-qualified. No particular HiDPI mode is guaranteed.
 > **Save this machine’s own NVRMFB + matching AuxKC, verify Recovery boots, and keep an external backup. A USB EFI or Reset NVRAM alone cannot restore system drivers.**
 
 > [!CAUTION]
-> **实验版：可能黑屏或无法进入 macOS。安装前必须完整阅读安装与离线回退部分。**
+> **实验版：可能黑屏或无法进入 macOS。**
+> **安装前必须认真阅读完整 README.md，尤其是安装方法、回退方法、无法进入系统时的恢复步骤及注意事项。**
 > **必须保存该设备自己的 NVRMFB 和配套 AuxKC，确认能进入 Recovery，并保留外部备份。只换 U 盘 EFI、重置 NVRAM，都不能完成系统驱动回退。**
 
 **English first · [简体中文](#简体中文)**
@@ -270,6 +271,7 @@ References: [pinned upstream installer](https://github.com/nullmoth/nvidia-macos
 
 > [!CAUTION]
 > **实验版，可能黑屏或无法进入系统。没有完成其他硬件的实机验证。**
+> **安装前必须认真阅读完整 README.md，尤其是安装、回退、离线恢复方法及注意事项。**
 > **先备份、先确认 Recovery 可用，再安装。必须保留该设备自己的 NVRMFB 和匹配 AuxKC，并复制到外部存储。不能使用其他电脑的内核集合。**
 > **只换 U 盘 EFI、Reset NVRAM、删除实验参数，都不等于完整恢复系统显卡驱动。**
 

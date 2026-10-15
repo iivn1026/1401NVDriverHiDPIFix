@@ -13,7 +13,7 @@
 > **安装前必须认真阅读完整 README.md，尤其是安装方法、回退方法、无法进入系统时的恢复步骤及注意事项。**
 > **必须保存该设备自己的 NVRMFB 和配套 AuxKC，确认能进入 Recovery，并保留外部备份。只换 U 盘 EFI、重置 NVRAM，都不能完成系统驱动回退。**
 
-**English first · [简体中文](#简体中文)**
+**English · [简体中文](#简体中文)**
 
 **Quick links: [Double-click tools](#double-click-installation-and-rollback) · [Install](#installation) · [Rollback in macOS](#rollback-in-macos) · [Cannot boot: Recovery](#cannot-boot-offline-recovery) · [中文安装](#中文安装) · [无法进入系统](#无法进入系统时离线回退)**
 

@@ -10,8 +10,8 @@ trap 'msg "STOP: backup failed at line $LINENO; driver unchanged." "停止：备
 [ "$(uname -m)" = x86_64 ]
 VERSION=$(cat /Library/NullMoth/driver-version)
 case "$VERSION" in
-    1.15.0|2.0.1) ;;
-    *) msg "STOP: unsupported driver version: $VERSION. Only 1.15.0 and 2.0.1 are allowed." "停止：驱动版本 $VERSION 未验证，仅允许 1.15.0 和 2.0.1。" >&2; exit 1 ;;
+    1.15.0|2.0.1|2.0.2) ;;
+    *) msg "STOP: unsupported driver version: $VERSION. Only 1.15.0, 2.0.1 and 2.0.2 are allowed." "停止：驱动版本 $VERSION 未验证，仅允许 1.15.0、2.0.1 和 2.0.2。" >&2; exit 1 ;;
 esac
 [ ! -e /Library/NullMoth/install.lock ]
 LOCK=/Library/NullMoth/install.lock

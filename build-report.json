@@ -9,7 +9,7 @@
   "identity_or_aspect_whitelist": false,
   "build": "passed",
   "ad_hoc_signature_check": "passed",
-  "undefined_import_comparison": "Each payload matches its unmodified source baseline; 2.0.1 also matches imports of installed 2.0.1 framebuffer.",
+  "undefined_import_comparison": "Each payload matches its unmodified pinned source baseline; 2.0.1 and 2.0.2 framebuffer sources and related ABI headers are identical.",
   "warning_count": 30,
   "sanitizer_policy_tests": "passed; multiple geometries, corrupt/truncated EDID, fallback sizing, caps/aspect and 100000 arbitrary-input trials",
   "generic_auxkc_preflight": "not performed",
@@ -24,7 +24,7 @@
       "Rollback.command",
       "Recovery.command"
     ],
-    "root_helper_transaction_fixtures": "Passed separately on 1.15.0 and 2.0.1 fixtures: paired install/restore, preflight/live build failure, restore-publish failure and unsupported-version rejection.",
+    "root_helper_transaction_fixtures": "Passed separately on 1.15.0, 2.0.1 and 2.0.2 fixtures: paired backup/install/restore, preflight/live-build failure, restore-publish failure and unsupported 2.0.3 rejection.",
     "frontend_validation": "shell syntax checked",
     "real_install_or_recovery_tested": false,
     "automatic_reboot": false,
@@ -38,7 +38,8 @@
   "compatibility_feedback": {
     "reported_versions": [
       "1.15.0",
-      "2.0.1"
+      "2.0.1",
+      "2.0.2"
     ],
     "reported_devices": [
       "ASUS TXGaming 6 Pro",
@@ -49,14 +50,16 @@
     "complete_device_version_matrix_supplied": false,
     "installer_accepted_versions": [
       "1.15.0",
-      "2.0.1"
+      "2.0.1",
+      "2.0.2"
     ],
     "other_versions_verified": false,
-    "additional_feedback": "Current system upgraded to 2.0.1 and reported working; version-matched experimental payload itself has not been installed by this task."
+    "additional_feedback": "User reported NVDriver 2.0.2 working on 2026-10-16; no complete device/version or higher-mode matrix supplied."
   },
   "source_releases": [
     "v1.15.0",
-    "v2.0.1"
+    "v2.0.1",
+    "v2.0.2"
   ],
   "payloads": {
     "1.15.0": {
@@ -76,6 +79,16 @@
       "warnings": 30,
       "ABI_headers_modified": false,
       "generic_payload_installed": false
+    },
+    "2.0.2": {
+      "source_commit": "d96eaca3f47e748ce5b1f5fa3913a85e48f1f5fb",
+      "uuid": "00C3E4DB-7885-374A-BD7D-570F50B69098",
+      "binary_sha256": "fd6aa30f27e5a5f02a770e75c55dc7e6832ff1e0b5dd4948cba85eb6ba5e1612",
+      "undefined_import_count": 467,
+      "warnings": 30,
+      "ABI_headers_modified": false,
+      "generic_payload_installed": false,
+      "source_comparison": "Framebuffer and related ABI headers identical to v2.0.1; rebuilt independently from v2.0.2; UUID matches, exact binary checksum recorded separately."
     }
   },
   "additional_boot_argument": "nvfbhidpiscaled=1 (requires nvfbhidpi=1); separately gated, default off",
@@ -83,5 +96,5 @@
   "new_revision_hardware_validation": "New higher-mode path and revised installer have not been installed on physical hardware by this task; previous user compatibility reports do not validate this revision.",
   "sanitizer_scaled_mode_tests": "Passed: 2560x1440 and 2560x1600 higher candidates; exact physical timing and DSC preservation; duplicates, capacity, insufficient memory, malformed dimensions, and 100000 bounded-input trials under ASan/UBSan.",
   "higher_modes_fallback": "Allocation failure uses existing boot-size fallback; enlarged kernel mapping failure also reduces to boot-sized backing and omits larger modes.",
-  "revision": "2026-10-15-higher-modes-and-portable-backup"
+  "revision": "2026-10-16-nvdriver-2.0.2-support"
 }

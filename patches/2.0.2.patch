@@ -1,0 +1,293 @@
+diff --git a/kexts/NVRMFB/fb/nvrm-fb.cpp b/kexts/NVRMFB/fb/nvrm-fb.cpp
+--- a/kexts/NVRMFB/fb/nvrm-fb.cpp
++++ b/kexts/NVRMFB/fb/nvrm-fb.cpp
+@@ -29,6 +29,7 @@
+ #include "nvrm-hud.h"
+ #include "nvrm-fb-safety.h"
+ #include "nvrm-allocation-table.h"
++#include "nvrm-edid-hidpi-policy.h"
+ static IORecursiveLock *startLock();
+ class NVRMCallReference {
+     OSObject *owner;
+@@ -118,6 +119,23 @@
+ static const char kPixelFormats[] = IO32BitDirectPixels "\0";
+ static const IODisplayModeID kModeId = 1;
+ static const unsigned kTraceMax = 900;
++
++static inline bool nvrmScaledHiDpiEnabled()
++{
++    int hidpi = 0, scaled = 0;
++    return PE_parse_boot_argn("nvfbhidpi", &hidpi, sizeof hidpi) && hidpi == 1 &&
++           PE_parse_boot_argn("nvfbhidpiscaled", &scaled, sizeof scaled) && scaled == 1;
++}
++
++static inline void nvrmEdidHiDpiExperiment(IODisplayModeInformation *info,
++                                           const NvU8 *edid, unsigned length,
++                                           unsigned maxW, unsigned maxH)
++{
++    int enabled = 0;
++    if (!PE_parse_boot_argn("nvfbhidpi", &enabled, sizeof enabled) || enabled != 1) return;
++    nvrmApplyEdidHiDpiMetadata(info, edid, length, maxW, maxH, true, kDisplayModeValidForHiResFlag);
++}
++
+ 
+ // Laptop panel brightness. macOS gives the brightness keys and the brightness slider to its built-in
+ // display, an AppleBacklightDisplay. IOGraphics creates one (AppleBacklightDisplay::probe) for a connection
+@@ -271,6 +289,8 @@
+     int dtIndex(IODisplayModeID id) const;
+     bool edidModeFor(const IODetailedTimingInformationV2 *d, struct NvKmsKapiDisplayMode *m);
+     unsigned addKmsRefreshModes(unsigned n);
++    unsigned addScaledHiDpiModes(unsigned n);
++    void expandHiDpiScanoutCaps(NvU32 pitchAlign);
+     void computeScanoutCaps(NvU32 pitchAlign);
+     unsigned fEdidHits = 0;
+     static void dtToKapi(const IODetailedTimingInformationV2 *d, struct NvKmsKapiDisplayMode *m);
+@@ -910,7 +930,12 @@
+         fKva = nullptr; fUserPhys = nullptr;
+         if (!fKms->mapMemory(fDev, fMem, NVKMS_KAPI_MAPPING_TYPE_KERNEL, &fKva) || !fKva) {
+             FBLOG("%s: mapMemory(KERNEL) failed", what);
+-            fKms->freeMemory(fDev, fMem); fMem = nullptr; continue;
++            fKms->freeMemory(fDev, fMem); fMem = nullptr;
++            if (nvrmScaledHiDpiEnabled() && fAllocSize > fSize) {
++                FBLOG("HiDPI enlarged mapping failed; retry boot-sized backing without added modes");
++                fAllocSize = fSize; fScalerMaxW = fW; fScalerMaxH = fH; fRasterMaxW = fW;
++            }
++            continue;
+         }
+         NvBool contig = fKms->isContiguous ? fKms->isContiguous(fMem) : NV_FALSE;
+         NvU64 kernelPhys = fPhysForVa ? fPhysForVa(fKva) : 0;
+@@ -2137,6 +2162,7 @@
+     const NvU64 mp_ = ((NvU64)mw * 4 + pitchAlign - 1) & ~((NvU64)pitchAlign - 1);
+     fAllocSize = (mp_ * mh + 0xffff) & ~0xffffull;
+     if (fAllocSize < fSize) fAllocSize = fSize;
++    expandHiDpiScanoutCaps(pitchAlign);
+ }
+ // Users on HDMI and DisplayPort (RTX 3050/3060/4060, 144-240 Hz panels) saw only 60 Hz: macOS's EDID parse handed
+ // validateDetailedTiming nothing above 60 Hz for those panels, while NVKMS parses the same EDID (CTA-861 and DisplayID
+@@ -2218,6 +2244,53 @@
+               k.pixelClockHz, b.detailedTimingModeID);
+     }
+     setProperty("NVRMRefreshModesAdded", (unsigned long long)added, 32);
++    return addScaledHiDpiModes(n);
++}
++// Separate opt-in: reserve backing memory before publishing larger desktop modes.
++void NVRMNVDAFramebuffer::expandHiDpiScanoutCaps(NvU32 pitchAlign)
++{
++    if (!nvrmScaledHiDpiEnabled() || !pitchAlign || (pitchAlign & (pitchAlign - 1))) return;
++    NvrmEdidPanelMetadata panel = {};
++    if (!nvrmReadEdidPanelMetadata(fEdid, fEdidSize, &panel) || !panel.preferredW || !panel.preferredH) return;
++    NvU32 mw = panel.preferredW * 2, mh = panel.preferredH * 2;
++    if (mw > 7680) mw = 7680;
++    if (mh > 4320) mh = 4320;
++    if (mw > fScalerMaxW) fScalerMaxW = mw;
++    if (mh > fScalerMaxH) fScalerMaxH = mh;
++    const NvU64 pitch = ((NvU64)fScalerMaxW * 4 + pitchAlign - 1) & ~((NvU64)pitchAlign - 1);
++    const NvU64 bytes = (pitch * fScalerMaxH + 0xffff) & ~0xffffull;
++    if (bytes > fAllocSize) fAllocSize = bytes;
++    FBLOG("fb%u HiDPI backing cap %ux%u (%llu KB); physical timings unchanged", fIndex,
++          fScalerMaxW, fScalerMaxH, fAllocSize / 1024);
++}
++unsigned NVRMNVDAFramebuffer::addScaledHiDpiModes(unsigned n)
++{
++    if (!nvrmScaledHiDpiEnabled() || !fMemBytes) return n;
++    NvrmEdidPanelMetadata panel = {};
++    if (!nvrmReadEdidPanelMetadata(fEdid, fEdidSize, &panel) || !panel.preferredW || !panel.preferredH) return n;
++    int seed = -1;
++    for (unsigned i = 0; i < n; ++i) {
++        const IODetailedTimingInformationV2 &d = fDT[i];
++        if (d.horizontalScaled || d.verticalScaled || d.horizontalActive != panel.preferredW ||
++            d.verticalActive != panel.preferredH) continue;
++        struct NvKmsKapiDisplayMode native = {};
++        if (!edidModeFor(&d, &native)) continue;
++        // Prefer the current boot timing when it is also the panel's preferred raster.
++        if (seed < 0) seed = (int)i;
++        if (native.timings.pixelClockHz == fBootMode.timings.pixelClockHz &&
++            native.timings.hVisible == fBootW && native.timings.vVisible == fBootH) {
++            seed = (int)i; break;
++        }
++    }
++    if (seed < 0) return n;
++    const unsigned before = n;
++    n = nvrmAppendScaledHiDpiTimings(fDT, n, sizeof fDT / sizeof fDT[0], (unsigned)seed,
++                                   fScalerMaxW, fScalerMaxH, fMemBytes, fPitchAlign, kIOScaleStretchToFit);
++    for (unsigned i = before; i < n; ++i)
++        FBLOG("fb%u HiDPI backing %ux%u -> native %ux%u as dt 0x%x", fIndex,
++              fDT[i].horizontalScaled, fDT[i].verticalScaled, fDT[i].horizontalActive,
++              fDT[i].verticalActive, fDT[i].detailedTimingModeID);
++    setProperty("NVRMHiDpiScaledModesAdded", (unsigned long long)(n - before), 32);
+     return n;
+ }
+ int NVRMNVDAFramebuffer::dtIndex(IODisplayModeID id) const
+@@ -2417,6 +2490,7 @@
+         info->flags = kDisplayModeValidFlag | kDisplayModeSafeFlag | (scaled ? kDisplayModeNotPresetFlag : 0);
+         if (!scaled && d.horizontalActive == fBootW && d.verticalActive == fBootH) info->flags |= kDisplayModeNativeFlag;
+         info->imageWidth = fEdidMmW; info->imageHeight = fEdidMmH;
++        nvrmEdidHiDpiExperiment(info, fEdid, fEdidSize, fScalerMaxW, fScalerMaxH);
+         return kIOReturnSuccess;
+     }
+     nvu_zero(info, sizeof *info);
+@@ -2425,6 +2499,7 @@
+     info->refreshRate = rr ? (UInt32)(((UInt64)rr << 16) / 1000) : (60u << 16);
+     info->flags = kDisplayModeValidFlag | kDisplayModeSafeFlag | kDisplayModeDefaultFlag;
+     info->imageWidth = fEdidMmW; info->imageHeight = fEdidMmH;
++    nvrmEdidHiDpiExperiment(info, fEdid, fEdidSize, fScalerMaxW, fScalerMaxH);
+     return kIOReturnSuccess;
+ }
+ IOReturn NVRMNVDAFramebuffer::getTimingInfoForDisplayMode(IODisplayModeID mode, IOTimingInformation *info)
+diff --git a/kexts/NVRMFB/fb/nvrm-edid-hidpi-policy.h b/kexts/NVRMFB/fb/nvrm-edid-hidpi-policy.h
+new file mode 100644
+--- /dev/null
++++ b/kexts/NVRMFB/fb/nvrm-edid-hidpi-policy.h
+@@ -0,0 +1,152 @@
++// Opt-in display metadata experiment for digital EDID 1.3/1.4 displays.
++// EDID metadata plus separately gated, bounded supersampled desktop modes.
++#pragma once
++
++struct NvrmEdidPanelMetadata {
++    unsigned widthMm, heightMm;
++    unsigned preferredW, preferredH;
++};
++
++static inline bool nvrmEdidPhysicalSizeValid(unsigned w, unsigned h)
++{
++    // Exclude zero/aspect-only EDID encodings and implausible desktop-panel dimensions.
++    return w >= 10 && h >= 10 && w <= 4095 && h <= 4095 &&
++           static_cast<unsigned long long>(w) <= static_cast<unsigned long long>(h) * 8 &&
++           static_cast<unsigned long long>(h) <= static_cast<unsigned long long>(w) * 8;
++}
++
++static inline bool nvrmReadEdidPanelMetadata(const unsigned char *edid, unsigned length,
++                                              NvrmEdidPanelMetadata *result)
++{
++    if (!edid || !result || length < 128) return false;
++    const unsigned char header[8] = {0, 255, 255, 255, 255, 255, 255, 0};
++    for (unsigned i = 0; i < 8; ++i) if (edid[i] != header[i]) return false;
++    if (edid[18] != 1 || (edid[19] != 3 && edid[19] != 4) || !(edid[20] & 0x80)) return false;
++    unsigned checksum = 0;
++    for (unsigned i = 0; i < 128; ++i) checksum += edid[i];
++    if (checksum & 255u) return false;
++
++    NvrmEdidPanelMetadata panel = {};
++    const unsigned char *d = edid + 54;
++    // First DTD is used as a preferred-mode reference only when explicitly declared.
++    // Descriptor strings and interlaced timings are never treated as native rasters.
++    if ((edid[24] & 2) && (d[0] || d[1]) && !(d[17] & 0x80)) {
++        const unsigned w = d[2] | ((d[4] & 0xf0u) << 4);
++        const unsigned h = d[5] | ((d[7] & 0xf0u) << 4);
++        if (w >= 320 && h >= 200) {
++            panel.preferredW = w;
++            panel.preferredH = h;
++            const unsigned mmW = d[12] | ((d[14] & 0xf0u) << 4);
++            const unsigned mmH = d[13] | ((d[14] & 0x0fu) << 8);
++            if (nvrmEdidPhysicalSizeValid(mmW, mmH)) {
++                panel.widthMm = mmW;
++                panel.heightMm = mmH;
++            }
++        }
++    }
++    // Base-block size is in centimetres. In EDID 1.4 a zero axis may encode
++    // aspect ratio instead, so both axes must be present before conversion.
++    if (!panel.widthMm && edid[21] && edid[22]) {
++        const unsigned mmW = static_cast<unsigned>(edid[21]) * 10;
++        const unsigned mmH = static_cast<unsigned>(edid[22]) * 10;
++        if (nvrmEdidPhysicalSizeValid(mmW, mmH)) {
++            panel.widthMm = mmW;
++            panel.heightMm = mmH;
++        }
++    }
++    if (!panel.widthMm || !panel.heightMm) return false;
++    *result = panel;
++    return true;
++}
++
++template<class ModeInfo>
++static inline bool nvrmApplyEdidHiDpiMetadata(ModeInfo *info, const unsigned char *edid,
++                                            unsigned length, unsigned maxW, unsigned maxH,
++                                            bool enabled, unsigned hiResFlag)
++{
++    if (!enabled || !info) return false;
++    NvrmEdidPanelMetadata panel = {};
++    if (!nvrmReadEdidPanelMetadata(edid, length, &panel)) return false;
++    if (!info->imageWidth || !info->imageHeight) {
++        // Parsed physical sizes are bounded to 4095 mm, within UInt16 mode fields.
++        info->imageWidth = static_cast<decltype(info->imageWidth)>(panel.widthMm);
++        info->imageHeight = static_cast<decltype(info->imageHeight)>(panel.heightMm);
++    }
++    // Mark only already-enumerated, even-sized modes with the preferred aspect,
++    // at least preferred size, within this framebuffer's existing scaler limits.
++    // No mode is injected, selected, validated or made safe by this flag.
++    const unsigned w = info->nominalWidth, h = info->nominalHeight;
++    if (panel.preferredW && panel.preferredH && maxW && maxH &&
++        w >= panel.preferredW && h >= panel.preferredH &&
++        w <= maxW && h <= maxH && w <= 16384 && h <= 16384 &&
++        !(w & 1u) && !(h & 1u) &&
++        static_cast<unsigned long long>(w) * panel.preferredH ==
++        static_cast<unsigned long long>(h) * panel.preferredW)
++        info->flags |= hiResFlag;
++    return true;
++}
++
++
++// Backing surfaces above the physical raster allow logical HiDPI sizes above
++// native/2. They are downsampled to an unchanged NVKMS-validated panel timing.
++static const unsigned kNvrmHiDpiScaleCount = 6;
++static inline bool nvrmHiDpiBackingSize(unsigned nativeW, unsigned nativeH,
++                                       unsigned scale, unsigned maxW, unsigned maxH,
++                                       unsigned long long bytes, unsigned pitchAlign,
++                                       unsigned *outW, unsigned *outH)
++{
++    const unsigned num[kNvrmHiDpiScaleCount] = {5, 4, 3, 8, 7, 2};
++    const unsigned den[kNvrmHiDpiScaleCount] = {4, 3, 2, 5, 4, 1};
++    if (!outW || !outH || scale >= kNvrmHiDpiScaleCount ||
++        nativeW < 320 || nativeH < 200 || nativeW > 7680 || nativeH > 4320 ||
++        !pitchAlign || pitchAlign > 65536 || (pitchAlign & (pitchAlign - 1))) return false;
++    const unsigned long long wNum = static_cast<unsigned long long>(nativeW) * num[scale];
++    const unsigned long long hNum = static_cast<unsigned long long>(nativeH) * num[scale];
++    if (wNum % den[scale] || hNum % den[scale]) return false;
++    const unsigned w = static_cast<unsigned>(wNum / den[scale]);
++    const unsigned h = static_cast<unsigned>(hNum / den[scale]);
++    if ((w & 1) || (h & 1) || w <= nativeW || h <= nativeH ||
++        w > maxW || h > maxH || w > 7680 || h > 4320) return false;
++    const unsigned long long pitch = (static_cast<unsigned long long>(w) * 4 + pitchAlign - 1) &
++                                    ~(static_cast<unsigned long long>(pitchAlign) - 1);
++    if (pitch * h > bytes) return false;
++    *outW = w; *outH = h;
++    return true;
++}
++
++template<class Timing>
++static inline unsigned nvrmAppendScaledHiDpiTimings(Timing *timings, unsigned count,
++                                                   unsigned capacity, unsigned seed,
++                                                   unsigned maxW, unsigned maxH,
++                                                   unsigned long long bytes,
++                                                   unsigned pitchAlign, unsigned stretchFlag)
++{
++    if (!timings || count > capacity || seed >= count) return count;
++    const Timing base = timings[seed];
++    if (!base.pixelClock || base.horizontalScaled || base.verticalScaled ||
++        base.horizontalScaledInset || base.verticalScaledInset ||
++        base.horizontalBorderLeft || base.horizontalBorderRight ||
++        base.verticalBorderTop || base.verticalBorderBottom) return count;
++    for (unsigned scale = 0; scale < kNvrmHiDpiScaleCount && count < capacity; ++scale) {
++        unsigned w = 0, h = 0;
++        if (!nvrmHiDpiBackingSize(base.horizontalActive, base.verticalActive, scale,
++                                 maxW, maxH, bytes, pitchAlign, &w, &h)) continue;
++        const unsigned id = 0x20000000u | (scale << 8);
++        bool duplicate = false;
++        for (unsigned j = 0; j < count; ++j) {
++            if (timings[j].detailedTimingModeID == id ||
++                (timings[j].horizontalActive == base.horizontalActive &&
++                 timings[j].verticalActive == base.verticalActive &&
++                 timings[j].horizontalScaled == w && timings[j].verticalScaled == h)) {
++                duplicate = true; break;
++            }
++        }
++        if (duplicate) continue;
++        Timing scaled = base;
++        scaled.horizontalScaled = w; scaled.verticalScaled = h;
++        scaled.scalerFlags = stretchFlag;
++        scaled.detailedTimingModeID = id;
++        timings[count++] = scaled;
++    }
++    return count;
++}

@@ -22,7 +22,7 @@ finish() {
     if [ -t 0 ]; then ask 'Press Return to close: ' '按回车关闭：' ignored || true; fi
 }
 trap finish EXIT
-msg 'NVRMFB HiDPI | 1.15.0 / 2.0.1 / 2.0.2' 'NVRMFB HiDPI | 1.15.0 / 2.0.1 / 2.0.2'
+msg 'NVRMFB HiDPI | 1.15.0 / 2.0.1 / 2.0.2 / 2.0.4' 'NVRMFB HiDPI | 1.15.0 / 2.0.1 / 2.0.2 / 2.0.4'
 warn 'EXPERIMENTAL: read README.md carefully. Black screen/boot failure possible. Verify Recovery first.' '实验版：必须认真阅读 README.md，可能黑屏或无法启动。先确认 Recovery 可用。'
 msg '[1/4] Verifying package' '[1/4] 校验安装包'
 cd "$HERE"

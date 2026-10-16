@@ -1,11 +1,15 @@
-# NVRMFB EDID HiDPI experiment — NullMoth 1.15.0 / 2.0.1 / 2.0.2
+# NVRMFB EDID HiDPI experiment — NullMoth 1.15.0 / 2.0.1 / 2.0.2 / 2.0.4
 
-![MUST carefully read the entire README.md before installation / 安装前必须认真阅读完整 README.md。WARNING: experimental driver; reports only for 1.15.0, 2.0.1 and 2.0.2; installer matches 1.15.0, 2.0.1 or 2.0.2 / 警告：实验驱动，仅反馈三个版本可用，安装器匹配 1.15.0、2.0.1 或 2.0.2](docs/warning.svg)
+**`nvdriver-2.0.4` validation branch: version-matched 2.0.4 build; hardware boot/display tests pending.**
+
+**`nvdriver-2.0.4` 验证分支：提供 2.0.4 对应构建，尚待上机启动与显示验证。**
+
+![MUST carefully read the entire README.md before installation / 安装前必须认真阅读完整 README.md。WARNING: experimental driver; reports only for 1.15.0, 2.0.1 and 2.0.2; installer accepts 1.15.0, 2.0.1, 2.0.2 or 2.0.4; 2.0.4 hardware testing pending / 警告：实验驱动，仅反馈三个版本可用，安装器允许 1.15.0、2.0.1、2.0.2 或 2.0.4，2.0.4 待上机验证](docs/warning.svg)
 
 > [!CAUTION]
 > **EXPERIMENTAL — MAY CAUSE A BLACK SCREEN OR PREVENT macOS FROM BOOTING.**
 > **You MUST carefully read the entire README.md before installation, especially the installation, rollback, offline recovery instructions and precautions.**
-> Use only with a working, compatible **NullMoth 1.15.0, 2.0.1 or 2.0.2 x86_64** stack. The generic binary has not been hardware-qualified. No particular HiDPI mode is guaranteed.
+> Use only with a working, compatible **NullMoth 1.15.0, 2.0.1, 2.0.2 or 2.0.4 x86_64** stack. The generic binary has not been hardware-qualified. No particular HiDPI mode is guaranteed.
 > **Save this machine’s own NVRMFB + matching AuxKC, verify Recovery boots, and keep an external backup. A USB EFI or Reset NVRAM alone cannot restore system drivers.**
 
 > [!CAUTION]
@@ -17,15 +21,15 @@
 
 **Quick links: [Double-click tools](#double-click-installation-and-rollback) · [Install](#installation) · [Rollback in macOS](#rollback-in-macos) · [Cannot boot: Recovery](#cannot-boot-offline-recovery) · [中文安装](#中文安装) · [无法进入系统](#无法进入系统时离线回退)**
 
-This is an experimental replacement for **NVRMFB only**, built separately from pinned upstream v1.15.0, v2.0.1 and v2.0.2 sources. The package contains no private hardware identifiers, account names, SMBIOS identity, EFI, machine-specific AuxKC, or private recovery backup.
+This is an experimental replacement for **NVRMFB only**, built separately from pinned upstream v1.15.0, v2.0.1, v2.0.2 and v2.0.4 sources. The package contains no private hardware identifiers, account names, SMBIOS identity, EFI, machine-specific AuxKC, or private recovery backup.
 
 ## Strict compatibility notice
 
 > [!WARNING]
-> **Working compatibility has been reported only for versions 1.15.0, 2.0.1 and 2.0.2. All other versions are unverified; do not treat them as supported or bypass version checks.**
-> **This package contains separate 1.15.0, 2.0.1 and 2.0.2 source-matched builds. Its installer accepts only these exact versions. All three payloads are separately compiled and selected automatically. The 2.0.1 build preserves upstream 2.0.1 framebuffer changes; it is not the older binary relabeled as compatible. Hardware feedback is not independent validation of every package payload.**
+> **Working compatibility has been reported only for versions 1.15.0, 2.0.1 and 2.0.2. On this branch, 2.0.4 has source/build/fixture validation only, with hardware testing pending. Releases outside the installer allowlist remain blocked; do not bypass version checks.**
+> **This package contains separate 1.15.0, 2.0.1, 2.0.2 and 2.0.4 source-matched builds. Its installer accepts only these exact versions. All four payloads are separately compiled and selected automatically. The 2.0.1 build preserves upstream 2.0.1 framebuffer changes; it is not the older binary relabeled as compatible. Hardware feedback is not independent validation of every package payload.**
 
-Compatibility feedback supplied for three devices; detailed logs and a complete device-by-version test matrix were not supplied. The table does not assert that every device passed both versions.
+Compatibility feedback supplied for three devices; detailed logs and a complete device-by-version test matrix were not supplied. The table does not assert that every device passed every version.
 
 | Device | Report |
 | --- | --- |
@@ -35,7 +39,9 @@ Compatibility feedback supplied for three devices; detailed logs and a complete 
 
 **macOS upgrade feedback:** A user reported that HiDPI remained effective after upgrading from **macOS 15.8.1 to macOS 26.7.1**.
 
-**NVDriver 2.0.2 feedback:** Reported working on 2026-10-16. The installer now accepts exactly 1.15.0, 2.0.1 and 2.0.2, automatically selecting the matching payload. The 2.0.2 payload was rebuilt from its pinned release. Its framebuffer source and related ABI headers are identical to 2.0.1, so the build UUID can match; use each payload’s SHA256SUMS entry to verify its exact bytes. This feedback does not supply a complete device-by-version matrix or independently validate every newly added higher mode. Create a fresh backup after updating NVDriver; do not restore a 2.0.1 AuxKC over a 2.0.2 installation.
+**NVDriver 2.0.2 feedback:** Reported working on 2026-10-16. At that time the installer accepted exactly 1.15.0, 2.0.1 and 2.0.2, automatically selecting the matching payload. The 2.0.2 payload was rebuilt from its pinned release. Its framebuffer source and related ABI headers are identical to 2.0.1, so the build UUID can match; use each payload’s SHA256SUMS entry to verify its exact bytes. This feedback does not supply a complete device-by-version matrix or independently validate every newly added higher mode. Create a fresh backup after updating NVDriver; do not restore a 2.0.1 AuxKC over a 2.0.2 installation.
+
+**NVDriver 2.0.4 validation (2026-10-17):** This branch accepts 2.0.4 and selects its own payload. It is rebuilt from pinned v2.0.4 source, preserving upstream GPU sleep/wake handling and notification changes. Its 471 undefined imports match its unmodified 2.0.4 baseline; strict ad-hoc signature checks pass. This is build/installer validation, not a report of successful physical-device boot, display scaling or sleep/wake. Create a fresh paired backup under 2.0.4; never restore an older release’s AuxKC over it.
 
 ## Higher HiDPI resolutions (new experimental option)
 
@@ -128,7 +134,7 @@ bash "/Volumes/YOUR-USB/extracted-package/Recovery.command" "$NVRMFB_TARGET" "$N
 
 ## Before installation
 
-- A known-working NullMoth 1.15.0, 2.0.1 or 2.0.2 installation is required. Do not mix releases. Only the framebuffer is replaced; NVRM, NVAccel, NVRMAGDC and user-space GPU components must remain compatible.
+- A known-working NullMoth 1.15.0, 2.0.1, 2.0.2 or 2.0.4 installation is required. Do not mix releases. Only the framebuffer is replaced; NVRM, NVAccel, NVRMAGDC and user-space GPU components must remain compatible.
 - The commands below target the upstream system-volume layout: `/Library/Extensions` and `/Library/KernelCollections/AuxiliaryKernelExtensions.kc`. If the existing installation uses another layout, stop and adapt the procedure first.
 - Administrator access, `kmutil`, `codesign`, `shasum`, `openssl` and `PlistBuddy` are needed. Strict ad-hoc signature verification does not grant extension approval. These instructions do not change SIP/AMFI policy.
 - Confirm Recovery or compatible macOS installation media actually boots and can unlock/mount the data volume. Keep this README offline. If Recovery cannot boot, prepare recovery media before installing.
@@ -153,7 +159,7 @@ Every checksum must report `OK`; signature verification must return without an e
 
 ### 2. Create a fresh, paired backup on this machine
 
-The block below creates a private backup without replacing drivers. It records the original framebuffer, original AuxKC, macOS build, data-volume identity and extension hashes. It requires the release marker to be exactly `1.15.0`, `2.0.1` or `2.0.2`.
+The block below creates a private backup without replacing drivers. It records the original framebuffer, original AuxKC, macOS build, data-volume identity and extension hashes. It requires the release marker to be exactly `1.15.0`, `2.0.1`, `2.0.2` or `2.0.4`.
 
 ```sh
 sudo /bin/bash "$NVRMFB_PACKAGE/scripts/prepare-backup.sh" "$NVRMFB_PACKAGE" en
@@ -214,7 +220,7 @@ kmutil showloaded --list-only | awk '/com.nullmoth.NVRMFB/'
 system_profiler SPDisplaysDataType
 ```
 
-Payload UUIDs: **1.15.0: `71E8307F-9335-3C74-95E8-ECE8777A49BA`; 2.0.1: `00C3E4DB-7885-374A-BD7D-570F50B69098`; 2.0.2: `00C3E4DB-7885-374A-BD7D-570F50B69098`**. Confirm the boot argument is present and the payload matching the installed release is loaded. In System Settings → Displays, inspect available resolutions; show all resolutions if needed. Select a HiDPI candidate, not a low-resolution duplicate.
+Payload UUIDs: **1.15.0: `71E8307F-9335-3C74-95E8-ECE8777A49BA`; 2.0.1: `00C3E4DB-7885-374A-BD7D-570F50B69098`; 2.0.2: `00C3E4DB-7885-374A-BD7D-570F50B69098`; 2.0.4: `54BF709A-65B3-392C-BAD8-5F530DB39B6F`**. Confirm the boot argument is present and the payload matching the installed release is loaded. In System Settings → Displays, inspect available resolutions; show all resolutions if needed. Select a HiDPI candidate, not a low-resolution duplicate.
 
 A logical 1920×1080 mode backed by 3840×2160 pixels is 2× HiDPI; logical and backing sizes being equal is not. A larger boot logo or new candidates alone do not prove the desktop is using HiDPI. With the additional `nvfbhidpiscaled=1` opt-in it can add the bounded backing modes described above; a particular scaling percentage is not guaranteed. Avoid adding unrelated display overrides in the same test.
 
@@ -267,7 +273,7 @@ The opt-in policy checks each digital EDID 1.3/1.4 base block. It reads physical
 
 There is no model/vendor whitelist or fixed physical size. Invalid/unsupported EDID is left unchanged. CTA/DisplayID preferred timing/physical size parsing is not implemented. The metadata-only path changes no timing or allocation. The additional scaled-mode opt-in expands the backing allocation and enumerates larger source surfaces, while preserving physical panel timings, accelerator ABI and other GPU components.
 
-Compilation, strict ad-hoc signature verification, all 466 (1.15.0) / 467 (2.0.1 / 2.0.2) import comparisons, clean patch application, and ASan/UBSan tests pass. Tests cover multiple synthetic display geometries, malformed EDID, bounds/fallbacks and 100,000 arbitrary inputs. There are 30 existing upstream warnings, with no added warnings. **The generic binary and the manual installation/recovery procedure have not been validated end-to-end on other hardware or inside a real Recovery session.** Do not equate source tests with boot/display compatibility.
+Compilation, strict ad-hoc signature verification, all 466 (1.15.0) / 467 (2.0.1 / 2.0.2) / 471 (2.0.4) import comparisons, clean patch application, and ASan/UBSan tests pass. Tests cover multiple synthetic display geometries, malformed EDID, bounds/fallbacks and 100,000 arbitrary inputs. There are 30 existing upstream warnings, with no added warnings. **The generic binary and the manual installation/recovery procedure have not been validated end-to-end on other hardware or inside a real Recovery session.** Do not equate source tests with boot/display compatibility.
 
 ## Files and source
 
@@ -276,14 +282,14 @@ The package includes versioned `payloads/…/NVRMFB.kext`, matching `patches/…
 Rebuild with Command Line Tools and an SDK containing Kernel.framework headers. Copy the build helper, `patches/` directory, `nvrm-edid-hidpi-policy.h` and both test harnesses into a fresh directory, then run:
 
 ```sh
-NVRMFB_SOURCE_VERSION=1.15.0  # or 2.0.1 / 2.0.2
+NVRMFB_SOURCE_VERSION=1.15.0  # or 2.0.1 / 2.0.2 / 2.0.4
 git clone --depth 1 --branch "v$NVRMFB_SOURCE_VERSION" https://github.com/nullmoth/nvidia-macos-driver.git source
 git clone --depth 1 --branch 610.57.04 https://github.com/NVIDIA/open-gpu-kernel-modules.git ogkm
 git -C source rev-parse HEAD
 git -C ogkm rev-parse HEAD
 ```
 
-Expected commits: `source`: 1.15.0 `56bc4f9ae3105df052eefd3ea094c782e56853c3`; 2.0.1 `db3716fde712f0542ef7fcec29226b26e99e07dc`; 2.0.2 `d96eaca3f47e748ce5b1f5fa3913a85e48f1f5fb`; `ogkm`: `e4a5faa2567f28c8eabe0ebb6422b6d0abcf37eb`.
+Expected commits: `source`: 1.15.0 `56bc4f9ae3105df052eefd3ea094c782e56853c3`; 2.0.1 `db3716fde712f0542ef7fcec29226b26e99e07dc`; 2.0.2 `d96eaca3f47e748ce5b1f5fa3913a85e48f1f5fb`; 2.0.4 `b737dedc11fa4edbcb4abe8d51e94cebfed21ac6`; `ogkm`: `e4a5faa2567f28c8eabe0ebb6422b6d0abcf37eb`.
 
 ```sh
 git -C source apply --check ../patches/"$NVRMFB_SOURCE_VERSION".patch
@@ -309,13 +315,13 @@ References: [pinned upstream installer](https://github.com/nullmoth/nvidia-macos
 
 **快速入口：[双击安装与回退](#双击安装与回退推荐入口) · [中文安装](#中文安装) · [还能进系统时回退](#还能进系统时回退) · [无法进入系统时离线回退](#无法进入系统时离线回退)**
 
-这是分别基于 NullMoth **1.15.0、2.0.1 和 2.0.2** 的通用 NVRMFB 实验版，只替换 framebuffer。文档与压缩包不包含私人硬件标识、用户名、三码、私人 EFI、设备专属内核集合或个人回退备份。
+这是分别基于 NullMoth **1.15.0、2.0.1、2.0.2 和 2.0.4** 的通用 NVRMFB 实验版，只替换 framebuffer。文档与压缩包不包含私人硬件标识、用户名、三码、私人 EFI、设备专属内核集合或个人回退备份。
 
 ## 严格兼容性警告与反馈设备
 
 > [!WARNING]
-> **目前仅收到 1.15.0、2.0.1 和 2.0.2 可用的兼容性反馈。其他版本全部未验证，不得当作已支持，也不要绕过版本检查安装。**
-> **此包分别从 1.15.0、2.0.1、2.0.2 源码编译三份驱动，安装器只接受这三个精确版本并自动选择配套文件。2.0.1 构建保留上游新版 framebuffer 改动，不使用旧二进制冒充新版。设备反馈不代表每份构建都在所有设备完成独立实测。**
+> **目前仅收到 1.15.0、2.0.1 和 2.0.2 可用的兼容性反馈。本分支的 2.0.4 仅完成源码、构建及模拟流程校验，尚待上机验证；白名单以外版本仍拒绝安装，不要绕过检查。**
+> **此包分别从 1.15.0、2.0.1、2.0.2、2.0.4 源码编译四份驱动，安装器只接受这四个精确版本并自动选择配套文件。2.0.1 构建保留上游新版 framebuffer 改动，不使用旧二进制冒充新版。设备反馈不代表每份构建都在所有设备完成独立实测。**
 
 三台设备的兼容性反馈如下。尚未提供完整日志及逐设备、逐版本的测试矩阵，因此不把表格写成“三台设备均在两个版本通过”。
 
@@ -327,7 +333,9 @@ References: [pinned upstream installer](https://github.com/nullmoth/nvidia-macos
 
 **macOS 升级反馈：** 有用户报告，从 **macOS 15.8.1 升级到 macOS 26.7.1** 后，HiDPI 仍然生效。
 
-**NVDriver 2.0.2 反馈：** 2026-10-16 收到可用报告。安装器现仅允许 1.15.0、2.0.1、2.0.2，并自动选择对应构建。2.0.2 已从固定版本源码重新编译；其 framebuffer 源码及相关 ABI 头文件与 2.0.1 相同，因此构建 UUID 可以相同；每份文件的准确内容以 SHA256SUMS 为准。此次反馈不代表已提供完整设备／版本矩阵，也不代表所有新增高档位均已独立验证。更新 NVDriver 后须重新备份，不可将 2.0.1 的 AuxKC 回退到 2.0.2 环境。
+**NVDriver 2.0.2 反馈：** 2026-10-16 收到可用报告。当时安装器仅允许 1.15.0、2.0.1、2.0.2，并自动选择对应构建。2.0.2 已从固定版本源码重新编译；其 framebuffer 源码及相关 ABI 头文件与 2.0.1 相同，因此构建 UUID 可以相同；每份文件的准确内容以 SHA256SUMS 为准。此次反馈不代表已提供完整设备／版本矩阵，也不代表所有新增高档位均已独立验证。更新 NVDriver 后须重新备份，不可将 2.0.1 的 AuxKC 回退到 2.0.2 环境。
+
+**NVDriver 2.0.4 验证（2026-10-17）：** 本分支允许 2.0.4，并选择独立的对应构建。驱动从固定 v2.0.4 源码重新编译，保留上游新增的 GPU 睡眠／唤醒与通知处理；471 个未定义导入符号与未修改的 2.0.4 基线一致，严格 ad-hoc 签名校验通过。这属于构建与安装器校验，不代表已完成真实设备启动、缩放或睡眠／唤醒测试。请在 2.0.4 下重新生成配对备份，不要将旧版本 AuxKC 回退到该环境。
 
 ## 更高 HiDPI 分辨率（新增实验开关）
 
@@ -420,7 +428,7 @@ bash "/Volumes/U盘真实名称/解压文件夹/Recovery.command" "$NVRMFB_TARGE
 
 ## 安装前必须确认
 
-- 已有正常工作的 **NullMoth 1.15.0、2.0.1 或 2.0.2 x86_64** 环境；不混用其他版本。NVRM、NVAccel、NVRMAGDC 和用户态组件保持兼容，不同时更新。
+- 已有正常工作的 **NullMoth 1.15.0、2.0.1、2.0.2 或 2.0.4 x86_64** 环境；不混用其他版本。NVRM、NVAccel、NVRMAGDC 和用户态组件保持兼容，不同时更新。
 - 现有安装使用 `/Library/Extensions` 和 `/Library/KernelCollections/AuxiliaryKernelExtensions.kc`。目录结构不同，不能直接照抄命令。
 - 能使用管理员权限，系统中有 `kmutil`、`codesign`、`shasum`、`openssl`、`PlistBuddy`。ad-hoc 签名校验通过不代表系统已经允许加载；命令不修改 SIP/AMFI。
 - 实际确认 Recovery 或安装介质能启动，且能挂载、解锁原来的数据卷。无法进入恢复环境，应先准备救援介质。
@@ -445,7 +453,7 @@ for bundle in payloads/*/NVRMFB.kext; do codesign --verify --deep --strict "$bun
 
 ### 2. 生成该设备自己的完整配对备份
 
-下面只创建备份，不替换驱动。会保存安装前的 NVRMFB、配套 AuxKC、系统构建版本、数据卷身份和扩展校验记录；版本标记必须为 `1.15.0`、`2.0.1` 或 `2.0.2`：
+下面只创建备份，不替换驱动。会保存安装前的 NVRMFB、配套 AuxKC、系统构建版本、数据卷身份和扩展校验记录；版本标记必须为 `1.15.0`、`2.0.1`、`2.0.2` 或 `2.0.4`：
 
 ```sh
 sudo /bin/bash "$NVRMFB_PACKAGE/scripts/prepare-backup.sh" "$NVRMFB_PACKAGE" zh
@@ -506,7 +514,7 @@ kmutil showloaded --list-only | awk '/com.nullmoth.NVRMFB/'
 system_profiler SPDisplaysDataType
 ```
 
-配套 UUID：**1.15.0 为 `71E8307F-9335-3C74-95E8-ECE8777A49BA`；2.0.1 为 `00C3E4DB-7885-374A-BD7D-570F50B69098`；2.0.2 为 `00C3E4DB-7885-374A-BD7D-570F50B69098`**。核对参数和实际加载版本，再到“系统设置 → 显示器”查看分辨率，必要时显示全部分辨率。选择 HiDPI 候选，不要误选同名的“低分辨率”模式。
+配套 UUID：**1.15.0 为 `71E8307F-9335-3C74-95E8-ECE8777A49BA`；2.0.1 为 `00C3E4DB-7885-374A-BD7D-570F50B69098`；2.0.2 为 `00C3E4DB-7885-374A-BD7D-570F50B69098`；2.0.4 为 `54BF709A-65B3-392C-BAD8-5F530DB39B6F`**。核对参数和实际加载版本，再到“系统设置 → 显示器”查看分辨率，必要时显示全部分辨率。选择 HiDPI 候选，不要误选同名的“低分辨率”模式。
 
 例如逻辑 1920×1080、实际渲染 3840×2160，才是 2 倍 HiDPI。逻辑尺寸与实际像素相同不算。开机 Logo 变大、列表出现候选，也不能直接报告桌面 HiDPI 已成功。额外启用 `nvfbhidpiscaled=1` 才会按上文规则添加受限的 backing 候选；测试期间不要叠加其他显示覆盖修改。
 
@@ -559,7 +567,7 @@ bash "$NVRMFB_BACKUP/Recovery.command" "$NVRMFB_TARGET"
 - 读取首选非隔行 DTD 的毫米尺寸，没有可用值时回退到完整的厘米尺寸；保留已有完整的物理尺寸。异常或不支持的 EDID 保持原状。
 - 只给已枚举、偶数尺寸、不小于首选尺寸、比例与首选模式相同、处于实际 scaler 上限内且每轴不超过 16384 像素的模式添加 HiRes 候选标记。
 - 默认元数据路径不改时序或显存分配；额外开启高档位时会扩大渲染缓冲区并枚举较大源表面，但保留物理输出时序，不改 GPU ABI 或其他驱动。尚未解析 CTA/DisplayID 扩展中的首选模式和尺寸，不能覆盖所有显示器。
-- 编译、签名、466（1.15.0）/467（2.0.1 / 2.0.2）个导入符号比较、补丁应用与 ASan/UBSan 测试通过；覆盖多种合成屏幕参数、异常 EDID、边界和十万组输入。保留 30 条上游原有警告，没有新增警告。
+- 编译、签名、466（1.15.0）/467（2.0.1 / 2.0.2）/471（2.0.4）个导入符号比较、补丁应用与 ASan/UBSan 测试通过；覆盖多种合成屏幕参数、异常 EDID、边界和十万组输入。保留 30 条上游原有警告，没有新增警告。
 - **通用二进制和上述安装/回退流程尚未在其他硬件与真实 Recovery 中完成端到端验证。** 测试通过不等于实际启动、切换显示模式和设备兼容性已验证。
 - 此包提供通用 `.command` 入口与共享 Shell 辅助脚本，不附带绑定特定设备的安装状态；在目标设备现场生成备份。生成的备份包含私有卷信息，**不要公开上传**。
 - 包内源码版本、复现编译命令与参考链接见英文部分；保留上游许可和声明，使用与再分发继续受其约束。

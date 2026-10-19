@@ -127,7 +127,7 @@
   "sanitizer_scaled_mode_tests": "Passed: 2560x1440 and 2560x1600 higher candidates; exact physical timing and DSC preservation; duplicates, capacity, insufficient memory, malformed dimensions, and 100000 bounded-input trials under ASan/UBSan.",
   "higher_modes_fallback": "Allocation failure uses existing boot-size fallback; enlarged kernel mapping failure also reduces to boot-sized backing and omits larger modes.",
   "revision": "2026-10-19-nvdriver-2.3.6-support",
-  "branch": "nvdriver-2.0.4",
+  "branch": "NVDRIVER-VERSION-2.0.4+",
   "warning_counts": {
     "legacy_versions": 30,
     "2.3.6_baseline": 34,

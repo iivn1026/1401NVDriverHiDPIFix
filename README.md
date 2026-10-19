@@ -1,8 +1,8 @@
-# version 2.0.4+
+# NVDRIVER-VERSION-2.0.4+
 
-**`nvdriver-2.0.4` validation branch: version-matched 2.0.4 / 2.3.6 builds; hardware boot/display tests pending.**
+**`NVDRIVER-VERSION-2.0.4+` validation branch: version-matched 2.0.4 / 2.3.6 builds; hardware boot/display tests pending.**
 
-**`nvdriver-2.0.4` 验证分支：提供 2.0.4 / 2.3.6 对应构建，尚待上机启动与显示验证。**
+**`NVDRIVER-VERSION-2.0.4+` 验证分支：提供 2.0.4 / 2.3.6 对应构建，尚待上机启动与显示验证。**
 
 ![MUST carefully read the entire README.md before installation / 安装前必须认真阅读完整 README.md。WARNING: experimental driver; reports only for 1.15.0, 2.0.1 and 2.0.2; installer accepts 1.15.0, 2.0.1, 2.0.2, 2.0.4 or 2.3.6; 2.0.4/2.3.6 hardware testing pending / 警告：实验驱动，仅反馈三个版本可用，安装器允许 1.15.0、2.0.1、2.0.2、2.0.4 或 2.3.6，新构建待上机验证](docs/warning.svg)
 
@@ -43,7 +43,7 @@ Compatibility feedback supplied for three devices; detailed logs and a complete 
 
 **NVDriver 2.0.4 validation (2026-10-17):** This branch accepts 2.0.4 and selects its own payload. It is rebuilt from pinned v2.0.4 source, preserving upstream GPU sleep/wake handling and notification changes. Its 471 undefined imports match its unmodified 2.0.4 baseline; strict ad-hoc signature checks pass. This is build/installer validation, not a report of successful physical-device boot, display scaling or sleep/wake. Create a fresh paired backup under 2.0.4; never restore an older release’s AuxKC over it.
 
-**NVDriver 2.3.6 validation (2026-10-19):** Support is included in the existing `nvdriver-2.0.4` branch. The installer selects a separate payload rebuilt from pinned v2.3.6; its 478 imports match the unmodified baseline. Upstream gamma, cursor, display-swap, flip and sleep/wake code are preserved. This is source/build/installer validation; physical-device boot, scaling and wake tests remain pending. Generate a fresh paired backup after updating NVDriver.
+**NVDriver 2.3.6 validation (2026-10-19):** Support is included in the existing `NVDRIVER-VERSION-2.0.4+` branch. The installer selects a separate payload rebuilt from pinned v2.3.6; its 478 imports match the unmodified baseline. Upstream gamma, cursor, display-swap, flip and sleep/wake code are preserved. This is source/build/installer validation; physical-device boot, scaling and wake tests remain pending. Generate a fresh paired backup after updating NVDriver.
 
 **2.3.6 boot-argument difference:** Upstream 2.3.6 already uses `nvfbhidpi=1` to enlarge backing capacity. This port preserves that allocation function exactly and does not apply the older allocation-expansion helper on top. `nvfbhidpiscaled=1` still additionally enables this project's bounded candidate generation, and requires `nvfbhidpi=1`. Removing only `nvfbhidpiscaled=1` disables the added candidates but leaves upstream capacity expansion enabled. Remove **both** flags for the experiment-disabled baseline. No EFI, argument or display mode is changed automatically.
 
@@ -341,7 +341,7 @@ References: [pinned upstream installer](https://github.com/nullmoth/nvidia-macos
 
 **NVDriver 2.0.4 验证（2026-10-17）：** 本分支允许 2.0.4，并选择独立的对应构建。驱动从固定 v2.0.4 源码重新编译，保留上游新增的 GPU 睡眠／唤醒与通知处理；471 个未定义导入符号与未修改的 2.0.4 基线一致，严格 ad-hoc 签名校验通过。这属于构建与安装器校验，不代表已完成真实设备启动、缩放或睡眠／唤醒测试。请在 2.0.4 下重新生成配对备份，不要将旧版本 AuxKC 回退到该环境。
 
-**NVDriver 2.3.6 验证（2026-10-19）：** 支持已加入现有 `nvdriver-2.0.4` 分支。安装器选择从固定 v2.3.6 源码重编译的独立构建，478 个导入符号与原始基线一致；保留新版 gamma、光标、显示器更换、翻转与睡眠／唤醒实现。目前只完成源码、构建和安装器验证，真实设备启动、缩放与唤醒仍待测试。更新 NVDriver 后请重新生成配对备份。
+**NVDriver 2.3.6 验证（2026-10-19）：** 支持已加入现有 `NVDRIVER-VERSION-2.0.4+` 分支。安装器选择从固定 v2.3.6 源码重编译的独立构建，478 个导入符号与原始基线一致；保留新版 gamma、光标、显示器更换、翻转与睡眠／唤醒实现。目前只完成源码、构建和安装器验证，真实设备启动、缩放与唤醒仍待测试。更新 NVDriver 后请重新生成配对备份。
 
 **2.3.6 参数差异：** 上游已用 `nvfbhidpi=1` 扩大渲染缓冲区，本移植完整保留该函数，不再叠加旧版的扩容函数。`nvfbhidpiscaled=1` 仍用于额外启用本项目受限的候选模式生成，且需要同时有 `nvfbhidpi=1`。只移除 `nvfbhidpiscaled=1` 会关闭额外候选，但上游扩容仍开启；基础启动验证应移除**两个**参数。安装器不会自动改 EFI、参数或显示模式。
 

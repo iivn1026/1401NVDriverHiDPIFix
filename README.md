@@ -1,4 +1,9 @@
-# NVRMFB EDID HiDPI experiment — NullMoth 1.15.0 / 2.0.1 / 2.0.2
+> [!IMPORTANT]
+> **NVDriver 2.0.4 and later: use the [version 2.0.4+ branch](https://github.com/iivn1026/1401NVDriverHiDpiFix/tree/nvdriver-2.0.4). Refer to that branch for its exact supported releases.**
+>
+> **NVDriver 2.0.4 及以上版本请移步 [version 2.0.4+ 副分支](https://github.com/iivn1026/1401NVDriverHiDpiFix/tree/nvdriver-2.0.4)，具体可安装版本以该分支说明为准。**
+
+# version2.0.4-
 
 ![MUST carefully read the entire README.md before installation / 安装前必须认真阅读完整 README.md。WARNING: experimental driver; reports only for 1.15.0, 2.0.1 and 2.0.2; installer matches 1.15.0, 2.0.1 or 2.0.2 / 警告：实验驱动，仅反馈三个版本可用，安装器匹配 1.15.0、2.0.1 或 2.0.2](docs/warning.svg)
 

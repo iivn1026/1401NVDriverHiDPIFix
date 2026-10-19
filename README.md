@@ -1,4 +1,4 @@
-# NVRMFB EDID HiDPI experiment — NullMoth 1.15.0 / 2.0.1 / 2.0.2 / 2.0.4 / 2.3.6
+# version 2.0.4+
 
 **`nvdriver-2.0.4` validation branch: version-matched 2.0.4 / 2.3.6 builds; hardware boot/display tests pending.**
 

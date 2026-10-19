@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="345" viewBox="0 0 1120 345" role="img" aria-labelledby="title desc">
 <title id="title">Experimental driver warning / 实验驱动警告</title>
-<desc id="desc">You MUST carefully read the entire README.md before installation. 安装前必须认真阅读完整 README.md。 Black screen or boot failure possible. Working reports only for 1.15.0, 2.0.1 and 2.0.2. Installer accepts 1.15.0, 2.0.1, 2.0.2 and 2.0.4; 2.0.4 hardware tests pending. 可能黑屏或无法启动；仅反馈 1.15.0、2.0.1 和 2.0.2 可用，安装器允许 1.15.0、2.0.1、2.0.2 和 2.0.4，2.0.4 待上机验证。</desc>
+<desc id="desc">You MUST carefully read the entire README.md before installation. 安装前必须认真阅读完整 README.md。 Black screen or boot failure possible. Working reports only for 1.15.0, 2.0.1 and 2.0.2. Installer accepts 1.15.0, 2.0.1, 2.0.2, 2.0.4 and 2.3.6; 2.0.4/2.3.6 hardware tests pending. 可能黑屏或无法启动；仅反馈 1.15.0、2.0.1 和 2.0.2 可用，安装器允许 1.15.0、2.0.1、2.0.2、2.0.4 和 2.3.6，新增构建待上机验证。</desc>
 <rect x="3" y="3" width="1114" height="339" rx="12" fill="#fff5f5" stroke="#b91c1c" stroke-width="6"/>
 <g fill="#b91c1c" font-family="system-ui,-apple-system,Arial,'Noto Sans CJK SC','Microsoft YaHei',sans-serif" font-weight="800">
 <text x="25" y="38" font-size="25">WARNING — EXPERIMENTAL DRIVER / 警告：实验驱动</text>
 <text x="25" y="71" font-size="20">Reported working: 1.15.0 / 2.0.1 / 2.0.2 only. Other versions are UNVERIFIED.</text>
 <text x="25" y="104" font-size="22">仅反馈 1.15.0 / 2.0.1 / 2.0.2 可用，其他版本未验证，可能黑屏或无法启动。</text>
-<text x="25" y="139" font-size="19">Installer: 1.15.0 / 2.0.1 / 2.0.2 / 2.0.4 ONLY. Back up; verify Recovery.</text>
-<text x="25" y="173" font-size="19">安装器：1.15.0 / 2.0.1 / 2.0.2 / 2.0.4；先备份并确认 Recovery 可用。</text>
+<text x="25" y="139" font-size="19">Installer: 1.15.0 / 2.0.1 / 2.0.2 / 2.0.4 / 2.3.6 ONLY. Back up; verify Recovery.</text>
+<text x="25" y="173" font-size="19">安装器：1.15.0 / 2.0.1 / 2.0.2 / 2.0.4 / 2.3.6；先备份并确认 Recovery 可用。</text>
 <text x="25" y="278" font-size="21">You MUST carefully read the entire README.md before installation.</text>
 <text x="25" y="313" font-size="23">安装前必须认真阅读完整 README.md，特别是安装、回退及注意事项。</text>
-<text x="25" y="208" font-size="21">2.0.4: build validation passed; hardware testing pending.</text>
-<text x="25" y="243" font-size="22">2.0.4：构建校验通过，真实设备启动、显示与睡眠／唤醒仍待验证。</text>
+<text x="25" y="208" font-size="21">2.0.4 / 2.3.6: build checks passed; hardware testing pending.</text>
+<text x="25" y="243" font-size="22">2.0.4 / 2.3.6：构建校验通过，启动、显示及睡眠／唤醒待上机验证。</text>
 </g></svg>

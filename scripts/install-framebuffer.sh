@@ -12,8 +12,8 @@ EXT=/Library/Extensions
 KC=/Library/KernelCollections/AuxiliaryKernelExtensions.kc
 VERSION=$(cat /Library/NullMoth/driver-version)
 case "$VERSION" in
-    1.15.0|2.0.1|2.0.2|2.0.4|2.3.6) ;;
-    *) msg "STOP: unsupported driver version: $VERSION. Only 1.15.0, 2.0.1, 2.0.2, 2.0.4 and 2.3.6 are allowed." "停止：驱动版本 $VERSION 未验证，仅允许 1.15.0、2.0.1、2.0.2、2.0.4 和 2.3.6。" >&2; exit 1 ;;
+    1.15.0|2.0.1|2.0.2|2.0.4|2.3.6|2.4.3) ;;
+    *) msg "STOP: unsupported driver version: $VERSION. Only 1.15.0, 2.0.1, 2.0.2, 2.0.4, 2.3.6 and 2.4.3 are allowed." "停止：驱动版本 $VERSION 未验证，仅允许 1.15.0、2.0.1、2.0.2、2.0.4、2.3.6 和 2.4.3。" >&2; exit 1 ;;
 esac
 [ "$(sw_vers -buildVersion)" = "$(cat "$BK/macos-build.txt")" ]
 [ -d "$EXT/NVRMFB.kext" ] && [ ! -L "$EXT/NVRMFB.kext" ]
